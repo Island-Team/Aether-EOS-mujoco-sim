@@ -1,5 +1,8 @@
 <?xml version='1.0' encoding='utf-8'?>
 <mujoco model="eos_benchmark_v1">
+  <custom>
+    <numeric name="eos_benchmark_pick_place_v1" data="1" />
+  </custom>
   <compiler angle="radian" autolimits="true" />
   <option timestep="0.002" integrator="implicitfast" gravity="0 0 -9.81" cone="elliptic" impratio="10" />
   <visual>

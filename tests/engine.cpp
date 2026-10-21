@@ -14,7 +14,7 @@ int Fail(const char* message) {
 }
 }  // namespace
 int main(int argc, char** argv) {
-  if (argc != 2) return Fail("usage: engine-test SCENE");
+  if (argc != 3) return Fail("usage: engine-test PICK_PLACE_SCENE NAVIGATION_SCENE");
   eos_mujoco::SimEngine engine(argv[1]);
   std::string error;
   if (!engine.Load(&error)) return Fail(error.c_str());
@@ -126,5 +126,39 @@ int main(int argc, char** argv) {
   if (!engine.GetSnapshot().object_held_id.empty()) return Fail("placed object remained held");
   std::cout << "engine ok: oracle score 1/1/1, collisions=" << score.collisions
             << ", sim_time=" << score.elapsed_s << "\n";
+  eos_mujoco::SimEngine navigation(argv[2]);
+  if (!navigation.Load(&error)) return Fail(error.c_str());
+  if (!navigation.Reset(42, &error)) return Fail(error.c_str());
+  const auto nav_initial = navigation.GetSnapshot();
+  auto nav_score = navigation.GetScore();
+  if (nav_score.navigation || nav_score.grasp || nav_score.placement)
+    return Fail("navigation scene starts with a scored task stage");
+  navigation.Step(20);
+  if (navigation.GetScore().grasp || navigation.GetScore().placement)
+    return Fail("navigation scene scored manipulation after free stepping");
+  if (!navigation.Reset(42, &error)) return Fail(error.c_str());
+  const auto nav_replay = navigation.GetSnapshot();
+  for (int i = 0; i < 2; ++i)
+    for (int k = 0; k < 2; ++k)
+      if (!Near(nav_initial.obstacle_positions[i][k], nav_replay.obstacle_positions[i][k]))
+        return Fail("navigation same seed changed obstacle pose");
+  if (!navigation.Reset(43, &error)) return Fail(error.c_str());
+  const auto nav_variant = navigation.GetSnapshot();
+  if (Near(nav_initial.obstacle_positions[0][1], nav_variant.obstacle_positions[0][1]) &&
+      Near(nav_initial.obstacle_positions[1][1], nav_variant.obstacle_positions[1][1]))
+    return Fail("navigation distinct seeds did not vary obstacles");
+  if (!navigation.Reset(42, &error)) return Fail(error.c_str());
+  eos_mujoco::Command nav_command{};
+  nav_command.type = eos_mujoco::Command::Type::BaseNavigateRelative;
+  nav_command.values = {0, -1.3, 0};
+  if (!navigation.Execute(nav_command).accepted) return Fail("navigation first leg failed");
+  if (navigation.GetScore().navigation) return Fail("navigation scored before reaching goal");
+  nav_command.values = {1.65, 0, 0};
+  if (!navigation.Execute(nav_command).accepted) return Fail("navigation second leg failed");
+  nav_score = navigation.GetScore();
+  if (!nav_score.navigation || nav_score.grasp || nav_score.placement || nav_score.collisions != 0)
+    return Fail("navigation goal or score invariants failed");
+  std::cout << "engine ok: navigation score 1/0/0, collisions=" << nav_score.collisions
+            << ", sim_time=" << nav_score.elapsed_s << "\n";
   return 0;
 }
