@@ -1,0 +1,39 @@
+syntax = "proto3";
+
+package eos.mujoco.benchmark.v1;
+
+// Private benchmark-only control channel. Never expose this socket to an agent.
+service BenchmarkService {
+  rpc Reset(ResetRequest) returns (StateResponse);
+  rpc Step(StepRequest) returns (StateResponse);
+  rpc State(StateRequest) returns (StateResponse);
+  rpc Score(ScoreRequest) returns (ScoreResponse);
+  rpc SetPaused(SetPausedRequest) returns (StateResponse);
+}
+message ResetRequest { uint64 seed = 1; }
+message StepRequest { uint32 steps = 1; }
+message StateRequest {}
+message ScoreRequest {}
+message SetPausedRequest { bool paused = 1; }
+message StateResponse {
+  bool ok = 1;
+  string error = 2;
+  uint64 sequence = 3;
+  double elapsed_sim_s = 4;
+  double base_x_m = 5;
+  double base_y_m = 6;
+  double base_yaw_rad = 7;
+  repeated double arm_joints_rad = 8;
+  string object_held_id = 9;
+  repeated double object_position_m = 10; // world xyz
+  repeated double obstacle_0_position_m = 11; // world xy
+  repeated double obstacle_1_position_m = 12; // world xy
+  repeated double gripper_pinch_position_m = 13; // world xyz
+}
+message ScoreResponse {
+  bool navigation = 1;
+  bool grasp = 2;
+  bool placement = 3;
+  uint32 collisions = 4;
+  double elapsed_sim_s = 5;
+}
