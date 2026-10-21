@@ -60,6 +60,21 @@ The EOS protocol is a pinned copy of `Island-eos/share/contracts/eos/external/si
 
 The example scene and model attribution are documented under `assets/`.
 
+## View and check the scene without EOS
+
+Use the installed MuJoCo viewer to inspect the robot, table, pickup object, tray, obstacles, cameras, joints, and contacts. This path starts no EOS process or benchmark service and uses no Unix socket.
+
+![Default benchmark scene overview](docs/scene-overview.png)
+
+```sh
+export MUJOCO_ROOT=/absolute/path/to/mujoco-3.16.0
+tools/scene-view.sh
+```
+
+The launcher compiles `assets/scene.xml` first and then opens it in `bin/simulate`. In the viewer, pause or step physics, orbit the camera, select a body or camera, and inspect contacts. The XML contains the default layout; seeded object and obstacle variations are applied by `SimEngine::Reset(seed)` at runtime and therefore are not shown in this standalone viewer.
+
+For a headless scene-loading check, run `tools/scene-view.sh --check`. It is also registered as `ctest --test-dir build -R scene-view-check --output-on-failure`. Run `tools/scene-view.sh --snapshot /tmp/eos-scene.png` to save a PNG overview without opening a window. Pass `--scene /absolute/path/to/scene.xml` to inspect a different MJCF scene. The interactive viewer requires a working X11 or Wayland desktop.
+
 ## License
 
 The package's original code and documentation are licensed under [Apache-2.0](LICENSE). Imported Menagerie model files retain their own licenses: [UR5e](assets/menagerie/universal_robots_ur5e/LICENSE) is BSD-3-Clause and [Robotiq 2F-85](assets/menagerie/robotiq_2f85/LICENSE) is BSD-2-Clause. Keep those license files and the [model provenance](assets/MODELS.md) when redistributing the scene or meshes. MuJoCo itself is installed separately through `MUJOCO_ROOT`.
