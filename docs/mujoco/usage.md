@@ -1,0 +1,78 @@
+# Build and run
+
+[Package overview](README.md) · [Benchmark tasks](benchmarks.md)
+
+Build the simulator separately from EOS. Install MuJoCo 3.16.0 and set `MUJOCO_ROOT` to the directory containing its `include/mujoco/mujoco.h` and `lib/libmujoco.so`. CMake also needs C++20, protobuf, gRPC, and libjpeg.
+
+```sh
+cmake -S . -B build -DMUJOCO_ROOT=/absolute/path/to/mujoco-3.16.0
+cmake --build build -j
+ctest --test-dir build --output-on-failure
+```
+
+## Standalone launcher
+
+The executable requires three absolute paths. `--scene` chooses one supported profile when the process starts. `--manual-step` starts paused; otherwise the simulator advances at the 2 ms physics step in real time. A benchmark `Reset` also pauses it for deterministic stepping. Both socket paths must differ, and the scene must be a regular file.
+
+```sh
+build/eos-mujoco-sim \
+  --socket /tmp/eos-simulator.sock \
+  --benchmark-socket /tmp/eos-benchmark.sock \
+  --scene "$PWD/assets/scenes/navigation/scene.xml" \
+  --manual-step
+```
+
+The Unix sockets are owner-only (`0600`). Use a private runtime directory for evaluation and give the benchmark socket only to the evaluator. Stop the process with `SIGINT` or `SIGTERM`; it removes its sockets on normal shutdown. `--help` prints the available flags.
+
+## EOS and EGIA
+
+EOS launches this package through its existing simulator wrapper. Copy `../Island-eos/etc/eos/eos.mujoco.toml` to the local EOS `etc/eos/eos.toml` after preserving your current configuration. In EOS `etc/eos/sim.toml`, select the MuJoCo backend and set paths for this checkout:
+
+```toml
+[simulator]
+backend = "mujoco"
+map_id = ""
+camera_source = "scene"
+
+[simulator.camera]
+width_px = 640
+height_px = 480
+fps = 30
+
+[simulator.mujoco]
+executable = "/absolute/path/to/Aether-EOS-mujoco-sim/build/eos-mujoco-sim"
+scene = "/absolute/path/to/Aether-EOS-mujoco-sim/assets/scene.xml"
+```
+
+Keep EOS's existing loopback `host` and `port` settings in the same `[simulator]` table. Replace only the `scene` path with `assets/scenes/navigation/scene.xml` to select navigation. EOS rejects unknown keys and other camera settings for MuJoCo. Launch from the EOS checkout with `./eos-launch.sh --simulator`; its wrapper passes both socket paths and the selected scene to this executable. Restart the simulator to change scenes.
+
+EGIA connects to the already-running EOS gateway through its normal connection profile. EGIA does not start this process or connect to the benchmark socket. EOS discovery and primitive calls are the agent's action and observation route.
+
+## Timed agent episode
+
+Start the simulator and EOS/EGIA agent first. The evaluator connects only to the private benchmark socket. This example resets seed 42, resumes real-time simulation for 30 wall-clock seconds while the separate agent acts, pauses, and prints one JSON score object:
+
+```sh
+build/benchmark-eval \
+  --benchmark-socket /absolute/path/to/benchmark.sock \
+  --task navigation \
+  --seed 42 \
+  --duration-s 30
+```
+
+Use `--task pick-place` with `assets/scene.xml`, or `--task navigation` with `assets/scenes/navigation/scene.xml`. The evaluator does not inspect the scene or run an agent policy, so the caller must match `--task` to the selected scene. It accepts a positive duration up to 3600 seconds. Its `success` is all three goals for pick and place or `navigation` alone for navigation; collision count and elapsed simulated time are reported separately. See [benchmark method](benchmarks.md) for multi-seed reporting.
+
+## Scene inspection and verification
+
+The standalone viewer compiles MJCF first. It shows the XML's initial layout; seeded variations happen only during `Reset` in the running simulator.
+
+```sh
+export MUJOCO_ROOT=/absolute/path/to/mujoco-3.16.0
+tools/scene-view.sh --scene "$PWD/assets/scene.xml"
+tools/scene-view.sh --check --scene "$PWD/assets/scenes/navigation/scene.xml"
+tools/scene-view.sh --snapshot /tmp/navigation.png --scene "$PWD/assets/scenes/navigation/scene.xml"
+```
+
+The interactive viewer needs a desktop display. `--check` validates model loading headlessly; `--snapshot` needs MuJoCo's `bin/render`. Run `ctest --test-dir build --output-on-failure` for engine, socket, evaluator, and scene checks. A passing viewer check establishes XML loadability, while the engine and smoke checks exercise reset, commands, service behavior, and scoring.
+
+**Related:** [Design](design.md) · [EOS simulator interface](interfaces/simulator.md) · [Benchmark interface](interfaces/benchmark.md)

@@ -76,10 +76,12 @@ class SimEngine {
   bool MotionActive() const { return active_motion_.load(); }
 
  private:
+  enum class BenchmarkProfile { PickPlace, Navigation };
   void StepLocked(int steps);
   Snapshot SnapshotLocked() const;
   bool ResolveIds(std::string* error);
   std::string scene_path_;
+  BenchmarkProfile profile_ = BenchmarkProfile::PickPlace;
   mutable std::mutex mutex_;
   mjModel_* model_ = nullptr;
   mjData_* data_ = nullptr;
@@ -90,6 +92,7 @@ class SimEngine {
   int gripper_actuator_id_ = -1, grip_site_id_ = -1, object_body_id_ = -1;
   int ee_site_id_ = -1, camera_id_ = -1, object_free_joint_id_ = -1;
   int left_pad_id_ = -1, right_pad_id_ = -1;
+  int goal_site_id_ = -1;
   std::uint64_t sequence_ = 0, interruption_epoch_ = 0;
   std::atomic_bool active_motion_{false};
   double base_drive_[3]{}, base_hold_[3]{}, target_joint_[6]{}, gripper_target_ = 0;

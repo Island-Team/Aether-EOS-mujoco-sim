@@ -56,6 +56,31 @@ SimEngine::~SimEngine() {
   }
 }
 bool SimEngine::ResolveIds(std::string* error) {
+  int recognized_profiles = 0;
+  bool navigation = false;
+  for (int i = 0; i < model_->nnumeric; ++i) {
+    const char* name = mj_id2name(model_, mjOBJ_NUMERIC, i);
+    if (!name || std::strncmp(name, "eos_benchmark_", 14) != 0) continue;
+    if (std::strcmp(name, "eos_benchmark_pick_place_v1") == 0) {
+      ++recognized_profiles;
+    } else if (std::strcmp(name, "eos_benchmark_navigation_v1") == 0) {
+      ++recognized_profiles;
+      navigation = true;
+    } else {
+      if (error) *error = "unknown benchmark profile: " + std::string(name);
+      return false;
+    }
+  }
+  if (recognized_profiles != 1) {
+    if (error) *error = "scene must declare exactly one supported benchmark profile";
+    return false;
+  }
+  profile_ = navigation ? BenchmarkProfile::Navigation : BenchmarkProfile::PickPlace;
+  goal_site_id_ = navigation ? Id(model_, mjOBJ_SITE, "navigation_goal") : -1;
+  if (navigation && goal_site_id_ < 0) {
+    if (error) *error = "navigation scene is missing navigation_goal site";
+    return false;
+  }
   for (int i = 0; i < 6; ++i) {
     joint_ids_[i] = Id(model_, mjOBJ_JOINT, kJoints[i]);
     actuator_ids_[i] = Id(model_, mjOBJ_ACTUATOR, kActuators[i]);
@@ -133,8 +158,14 @@ bool SimEngine::Reset(std::uint64_t seed, std::string* error) {
   for (int i = 0; i < 2; ++i) {
     int g = Id(model_, mjOBJ_GEOM, i == 0 ? "obstacle_0" : "obstacle_1");
     if (g >= 0) {
-      model_->geom_pos[3 * g] = i == 0 ? -0.65 : -0.45;
-      model_->geom_pos[3 * g + 1] = (i == 0 ? -0.65 : 0.8) + double(mix() % 1200) / 10000. - 0.06;
+      if (profile_ == BenchmarkProfile::Navigation) {
+        model_->geom_pos[3 * g] = i == 0 ? -0.7 : -0.1;
+        model_->geom_pos[3 * g + 1] =
+            (i == 0 ? -0.45 : -0.75) + double(mix() % 1200) / 10000. - 0.06;
+      } else {
+        model_->geom_pos[3 * g] = i == 0 ? -0.65 : -0.45;
+        model_->geom_pos[3 * g + 1] = (i == 0 ? -0.65 : 0.8) + double(mix() % 1200) / 10000. - 0.06;
+      }
     }
   }
   data_->qpos[freeadr + 3] = 1;
@@ -302,6 +333,14 @@ Score SimEngine::GetScore() const {
   Score s;
   if (!model_) return s;
   auto b = SnapshotLocked();
+  if (profile_ == BenchmarkProfile::Navigation) {
+    const mjtNum* goal = data_->site_xpos + 3 * goal_site_id_;
+    s.navigation = std::hypot(b.base_pose[0] - goal[0], b.base_pose[1] - goal[1]) < 0.18 &&
+                   std::abs(b.base_pose[2]) < 0.15;
+    s.collisions = collisions_;
+    s.elapsed_s = data_->time;
+    return s;
+  }
   s.navigation =
       (b.base_pose[0] > -0.70 && b.base_pose[0] < -0.35 && std::abs(b.base_pose[1]) < 0.30);
   s.grasp = lifted_contact_duration_s_ >= 0.15;

@@ -13,6 +13,8 @@ for node in gr.iter():
     for k in ('class','childclass','mesh','material','joint','joint1','joint2','tendon','body1','body2'):
         if k in node.attrib: node.set(k, 'gr_'+node.get(k))
 scene = ET.Element('mujoco', {'model':'eos_benchmark_v1'})
+ET.SubElement(ET.SubElement(scene, 'custom'), 'numeric',
+              {'name': 'eos_benchmark_pick_place_v1', 'data': '1'})
 ET.SubElement(scene,'compiler',{'angle':'radian','autolimits':'true'})
 ET.SubElement(scene,'option',{'timestep':'0.002','integrator':'implicitfast','gravity':'0 0 -9.81','cone':'elliptic','impratio':'10'})
 ET.SubElement(ET.SubElement(scene,'visual'),'global',{'offwidth':'640','offheight':'480'})
@@ -62,5 +64,22 @@ for source in (ur,gr):
 act=scene.find('actuator')
 for joint in ('base_x','base_y','base_yaw'):
     ET.SubElement(act,'velocity',{'name':joint+'_motor','joint':joint,'kv':'1000','ctrlrange':'-1.5 1.5','ctrllimited':'true'})
+navigation = deepcopy(scene)
+navigation.set('model', 'eos_navigation_v1')
+navigation.find('custom/numeric').set('name', 'eos_benchmark_navigation_v1')
+nav_world = navigation.find('worldbody')
+ET.SubElement(nav_world, 'site', {'name': 'navigation_goal', 'pos': '0.45 -1.3 0.02',
+                                  'type': 'ellipsoid', 'size': '0.18 0.18 0.005',
+                                  'rgba': '0.08 0.75 0.25 0.65'})
+for i, (x, y) in enumerate([(-0.7, -0.45), (-0.1, -0.75)]):
+    obstacle = next(g for g in nav_world.iter('geom') if g.get('name') == f'obstacle_{i}')
+    obstacle.set('pos', f'{x} {y} 0.3')
+for mesh in navigation.find('asset').findall('mesh'):
+    if 'file' in mesh.attrib:
+        mesh.set('file', '../../' + mesh.get('file'))
 ET.indent(scene)
 ET.ElementTree(scene).write(root/'scene.xml',encoding='unicode',xml_declaration=True)
+ET.indent(navigation)
+nav_path = root/'scenes/navigation/scene.xml'
+nav_path.parent.mkdir(parents=True, exist_ok=True)
+ET.ElementTree(navigation).write(nav_path, encoding='unicode', xml_declaration=True)
