@@ -41,3 +41,5 @@ target_include_directories(engine-test PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}/src"
 target_link_libraries(engine-test PRIVATE Threads::Threads JPEG::JPEG ${EGL_LIBRARY} mujoco)
 set_target_properties(engine-test PROPERTIES BUILD_RPATH "${MUJOCO_ROOT}/lib")
 add_test(NAME engine-test COMMAND $<TARGET_FILE:engine-test> "${CMAKE_CURRENT_SOURCE_DIR}/assets/scene.xml")
+add_test(NAME scene-view-check COMMAND bash "${CMAKE_CURRENT_SOURCE_DIR}/tools/scene-view.sh" --check)
+set_tests_properties(scene-view-check PROPERTIES ENVIRONMENT "MUJOCO_ROOT=${MUJOCO_ROOT}")
