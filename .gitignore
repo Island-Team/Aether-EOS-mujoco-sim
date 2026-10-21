@@ -1,0 +1,27 @@
+# Generated CMake trees and in-source build files.
+/build*/
+/cmake-build-*/
+CMakeFiles/
+CMakeCache.txt
+CTestTestfile.cmake
+Makefile
+cmake_install.cmake
+compile_commands.json
+Testing/
+_deps/
+
+# Local simulator state and diagnostics.
+*.sock
+*.sock.lock
+MUJOCO_LOG.TXT
+core
+core.*
+
+# Python helpers and local environments.
+__pycache__/
+*.py[cod]
+.venv/
+.env
+.env.*
+
+# Imported models and their licenses under assets/menagerie remain tracked.
