@@ -1,4 +1,8 @@
-# Island package release candidate
+# Island package release
+
+Version 0.1.0 is published in the Island package center as
+`island/mujoco-sim`. The commands below build a candidate for a new version;
+the current published version is immutable.
 
 `tools/build-package-release.py` assembles a local candidate for the curated
 Island package center. It runs the existing CTest suite, stages the simulator
@@ -27,9 +31,10 @@ checks them before installation. Review the full list and the actual target
 machine before approval.
 
 The `.manifest.draft.json` file describes the expected GitHub Release asset
-URL. After a tag and asset have actually been uploaded, reviewers must check
-the source, asset bytes, licenses, digest, requirements, and EOS behavior before
-entering this manifest into Island-port. Keep a version immutable after
+URL. After a tag and asset have actually been uploaded, verify the source,
+asset bytes, licenses, digest, requirements, and EOS behavior. A member's
+submission needs an independent reviewer before publication; a developer can
+publish a complete manifest directly. Keep a version immutable after
 publication; a changed binary needs a new version.
 
 To inspect archive layout without claiming qualification, pass `--skip-tests`.

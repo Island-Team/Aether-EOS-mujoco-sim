@@ -10,7 +10,7 @@ EOS owns `eos.simulator.v1.SimulatorService` and its HAL descriptor. This reposi
 
 EGIA attaches to an already-running EOS gateway, discovers its healthy devices and versioned primitives, and executes through EOS. It does not receive benchmark seed, goal truth, privileged state, or score. EGIA fleet aliases identify EOS endpoints; the simulation scene remains EOS's configuration choice. Agent evaluation compares an EGIA or other agent's EOS-visible behavior with a separate evaluator's private result.
 
-The EOS simulator wrapper currently expects absolute executable and scene paths. A future unified EOS external package manager may install, verify, and resolve those artifacts before launch. It does not alter the present scene path selector, simulator RPC, EGIA southbound contract, or private benchmark boundary. Any later package identity or distribution format belongs to that future integration work.
+The Island package client installs the published simulator archive after checking its size, digest, and host requirements. Activation generates an isolated EOS profile with absolute executable and scene paths. This keeps the existing scene path selector, simulator RPC, EGIA southbound contract, and private benchmark boundary intact. A source build may still use absolute paths in the operator's own EOS profile.
 
 ## Timing and failures
 
