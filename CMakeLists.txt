@@ -51,6 +51,7 @@ add_test(NAME smoke-rpc COMMAND bash "${CMAKE_CURRENT_SOURCE_DIR}/tests/smoke.sh
 add_test(NAME smoke-rpc-navigation COMMAND bash "${CMAKE_CURRENT_SOURCE_DIR}/tests/smoke.sh" $<TARGET_FILE:eos-mujoco-sim> "${CMAKE_CURRENT_SOURCE_DIR}/assets/scenes/navigation/scene.xml" $<TARGET_FILE:smoke-rpc>)
 add_test(NAME benchmark-eval-pick-place COMMAND "${Python3_EXECUTABLE}" "${CMAKE_CURRENT_SOURCE_DIR}/tests/eval.py" $<TARGET_FILE:eos-mujoco-sim> $<TARGET_FILE:benchmark-eval> "${CMAKE_CURRENT_SOURCE_DIR}/assets/scene.xml" pick-place)
 add_test(NAME benchmark-eval-navigation COMMAND "${Python3_EXECUTABLE}" "${CMAKE_CURRENT_SOURCE_DIR}/tests/eval.py" $<TARGET_FILE:eos-mujoco-sim> $<TARGET_FILE:benchmark-eval> "${CMAKE_CURRENT_SOURCE_DIR}/assets/scenes/navigation/scene.xml" navigation)
+add_test(NAME launcher-lifecycle COMMAND "${Python3_EXECUTABLE}" "${CMAKE_CURRENT_SOURCE_DIR}/tests/launcher.py" "${CMAKE_CURRENT_SOURCE_DIR}/launch.sh" "${CMAKE_CURRENT_SOURCE_DIR}/kill.sh" $<TARGET_FILE:eos-mujoco-sim>)
 add_executable(engine-test tests/engine.cpp src/engine.cpp)
 target_include_directories(engine-test PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}/src")
 target_link_libraries(engine-test PRIVATE Threads::Threads JPEG::JPEG ${EGL_LIBRARY} mujoco)

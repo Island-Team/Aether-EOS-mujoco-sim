@@ -27,7 +27,14 @@ cmake --build build -j
 ctest --test-dir build --output-on-failure
 ```
 
-For a direct run, pass absolute paths. The second socket is private to the evaluator.
+For a standalone background run, `launch.sh` uses the configured scene and creates owner-only sockets under `.run/mujoco/`. It loads the local `.env` automatically; `kill.sh` stops only processes started by this launcher. Copy [launch.conf.example](launch.conf.example) to the ignored `launch.conf` to change defaults.
+
+```sh
+./launch.sh --scene pick-place --no-gui
+./kill.sh
+```
+
+Use `--scene navigation` for the navigation task or `--gui` to open a separate MuJoCo viewer of the selected XML. The viewer does not display the running simulator's live state. For a direct run, pass absolute paths; the second socket is private to the evaluator.
 
 ```sh
 build/eos-mujoco-sim \
