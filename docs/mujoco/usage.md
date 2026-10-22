@@ -26,7 +26,18 @@ The Unix sockets are owner-only (`0600`). Use a private runtime directory for ev
 
 ## EOS and EGIA
 
-EOS launches this package through its existing simulator wrapper. Copy `../Island-eos/etc/eos/eos.mujoco.toml` to the local EOS `etc/eos/eos.toml` after preserving your current configuration. In EOS `etc/eos/sim.toml`, select the MuJoCo backend and set paths for this checkout:
+EOS can install the published `island/mujoco-sim` v0.1.0 release through its package client. Set `MUJOCO_ROOT` to a separate MuJoCo 3.16.0 installation, then run these commands from the Island-eos checkout:
+
+```sh
+./bin/island-pkg search mujoco
+./bin/island-pkg doctor island/mujoco-sim
+./bin/island-pkg install island/mujoco-sim
+./bin/island-pkg activate island/mujoco-sim
+```
+
+`doctor` checks host requirements. `install` checks the archive size and SHA-256 against the published manifest. `activate` writes a separate EOS configuration bundle and prints the launch command; review that bundle and run the printed command with `--simulator`. See the [EOS package usage guide](https://github.com/Island-Team/Island-eos/blob/master/docs/eos/usage/ext/mujoco.md).
+
+For a source checkout, EOS can still launch this package through its simulator wrapper. Copy `../Island-eos/etc/eos/eos.mujoco.toml` to the local EOS `etc/eos/eos.toml` after preserving your current configuration. In EOS `etc/eos/sim.toml`, select the MuJoCo backend and set paths for this checkout:
 
 ```toml
 [simulator]

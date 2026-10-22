@@ -8,6 +8,15 @@ The catalog starts with [pick and place](assets/scene.xml) and [navigation](asse
 
 ## Quick start
 
+For EOS, install the published `island/mujoco-sim` v0.1.0 package with the
+[Island package client](https://github.com/Island-Team/Island-eos/blob/master/docs/eos/usage/ext/mujoco.md).
+Run `doctor`, `install`, and `activate` from the Island-eos checkout. Activation
+prints a launch command using a separate configuration bundle, so the current
+EOS configuration stays intact. MuJoCo 3.16.0 is still installed separately;
+set `MUJOCO_ROOT` to its installation root.
+
+The following source build is useful for development and direct runs.
+
 Requires C++20, CMake 3.22+, MuJoCo 3.16.0, protobuf, gRPC, and libjpeg. `MUJOCO_ROOT` points to an installation with `include/mujoco/mujoco.h` and `lib/libmujoco.so`.
 
 ```sh
