@@ -17,10 +17,11 @@ set `MUJOCO_ROOT` to its installation root.
 
 The following source build is useful for development and direct runs.
 
-Requires C++20, CMake 3.22+, MuJoCo 3.16.0, protobuf, gRPC, and libjpeg. `MUJOCO_ROOT` points to an installation with `include/mujoco/mujoco.h` and `lib/libmujoco.so`.
+Requires C++20, CMake 3.22+, MuJoCo 3.16.0, protobuf, gRPC, and libjpeg. Set `MUJOCO_ROOT` to your actual MuJoCo installation directory, containing `include/mujoco/mujoco.h`, `lib/libmujoco.so`, `bin/compile`, and `bin/simulate`. Example paths in documentation are placeholders, not installation paths.
 
 ```sh
-cmake -S . -B build -DMUJOCO_ROOT=/absolute/path/to/mujoco-3.16.0
+: "${MUJOCO_ROOT:?Set MUJOCO_ROOT to your installed MuJoCo 3.16.0 directory}"
+cmake -S . -B build -DMUJOCO_ROOT="$MUJOCO_ROOT"
 cmake --build build -j
 ctest --test-dir build --output-on-failure
 ```
