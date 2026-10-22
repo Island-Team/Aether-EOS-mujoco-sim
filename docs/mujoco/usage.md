@@ -2,9 +2,10 @@
 
 [Package overview](README.md) · [Benchmark tasks](benchmarks.md)
 
-Build the simulator separately from EOS. Install MuJoCo 3.16.0 and set `MUJOCO_ROOT` to its real installation directory, containing `include/mujoco/mujoco.h`, `lib/libmujoco.so`, `bin/compile`, and `bin/simulate`. CMake also needs C++20, protobuf, gRPC, and libjpeg. A literal documentation placeholder such as `/absolute/path/to/mujoco-3.16.0` is not a valid installation.
+Build the simulator separately from EOS. Install MuJoCo 3.16.0, copy [`.env.example`](../../.env.example) to the ignored `.env`, and set `MUJOCO_ROOT` there to its real installation directory. It must contain `include/mujoco/mujoco.h`, `lib/libmujoco.so`, `bin/compile`, and `bin/simulate`. CMake also needs C++20, protobuf, gRPC, and libjpeg.
 
 ```sh
+. ./.env
 : "${MUJOCO_ROOT:?Set MUJOCO_ROOT to your installed MuJoCo 3.16.0 directory}"
 cmake -S . -B build -DMUJOCO_ROOT="$MUJOCO_ROOT"
 cmake --build build -j
@@ -79,6 +80,7 @@ Use `--task pick-place` with `assets/scene.xml`, or `--task navigation` with `as
 The standalone viewer compiles MJCF first. It shows the XML's initial layout; seeded variations happen only during `Reset` in the running simulator.
 
 ```sh
+. ./.env
 : "${MUJOCO_ROOT:?Set MUJOCO_ROOT to your installed MuJoCo 3.16.0 directory}"
 tools/scene-view.sh --scene "$PWD/assets/scene.xml"
 tools/scene-view.sh --check --scene "$PWD/assets/scenes/navigation/scene.xml"
