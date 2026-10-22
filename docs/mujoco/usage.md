@@ -14,7 +14,18 @@ ctest --test-dir build --output-on-failure
 
 ## Standalone launcher
 
-The executable requires three absolute paths. `--scene` chooses one supported profile when the process starts. `--manual-step` starts paused; otherwise the simulator advances at the 2 ms physics step in real time. A benchmark `Reset` also pauses it for deterministic stepping. Both socket paths must differ, and the scene must be a regular file.
+The root scripts manage a standalone simulator in the background. They load the local `.env` and optional ignored `launch.conf`; [launch.conf.example](../../launch.conf.example) shows the defaults. Relative scene, executable, and run-directory paths are resolved from the repository root. The default run directory is `.run/mujoco/`, with owner-only simulator and benchmark sockets, logs, and process records.
+
+```sh
+./launch.sh --scene pick-place --no-gui
+./kill.sh
+./launch.sh --scene navigation --gui
+./kill.sh
+```
+
+`--gui` opens MuJoCo's independent `simulate` viewer for the same XML. It requires a desktop display and the `MUJOCO_ROOT` viewer tools; it does not show the live simulator state or seeded reset variation. `--no-gui` is the default. `--manual-step`, `--run-dir PATH`, and `--executable PATH` override launcher defaults. If you use a custom run directory, pass the same `--run-dir` to `kill.sh`. The stop script checks the recorded process identity and only stops processes started by `launch.sh`; it does not stop EOS-owned simulator processes. Inspect `.run/mujoco/simulator.log` or `viewer.log` if startup fails.
+
+For direct execution without the process scripts, the executable requires three absolute paths. `--scene` chooses one supported profile when the process starts. `--manual-step` starts paused; otherwise the simulator advances at the 2 ms physics step in real time. A benchmark `Reset` also pauses it for deterministic stepping. Both socket paths must differ, and the scene must be a regular file.
 
 ```sh
 build/eos-mujoco-sim \
