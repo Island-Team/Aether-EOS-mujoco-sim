@@ -23,5 +23,6 @@ __pycache__/
 .venv/
 .env
 .env.*
+!.env.example
 
 # Imported models and their licenses under assets/menagerie remain tracked.
