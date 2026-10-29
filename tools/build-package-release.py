@@ -159,6 +159,8 @@ def main() -> None:
         "version": args.version,
         "description": "MuJoCo benchmark simulator for EOS",
         "source_commit": source_commit,
+        "source_url": SOURCE,
+        "release_url": f"{SOURCE}/releases/tag/v{args.version}",
         "license": "Apache-2.0",
         "contracts": ["eos.simulator.v1"],
         "assets": [{
