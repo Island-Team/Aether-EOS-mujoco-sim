@@ -11,7 +11,7 @@ The catalog starts with [pick and place](assets/scene.xml) and [navigation](asse
 For an IsOS deployment, install the approved `island/mujoco-sim` backend package
 with `isos backends install`, then select its exact version in the deployment
 graph and run `isos config apply`. GitHub Release v1.0.1 is available; its package
-catalog entry has not been published yet. See [package usage](docs/mujoco/usage.md)
+catalog entry is published. See [package usage](docs/mujoco/usage.md)
 for the local candidate install and graph setup. MuJoCo 3.16.0 remains an
 operator-provided dependency. Set `MUJOCO_ROOT` in the IsOS-managed EOS node's
 `launch.env` so EOS can pass it to the simulator process.

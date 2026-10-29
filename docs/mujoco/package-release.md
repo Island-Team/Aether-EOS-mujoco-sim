@@ -1,6 +1,6 @@
 # Island package release
 
-Version 1.0.1 is published as a GitHub Release for `island/mujoco-sim`. Its package-center catalog entry has not been published yet. The older v0.1.0 entry remains in the legacy catalog schema; use an IsOS schema v4 manifest for the v1.0.1 package.
+Version 1.0.1 is published as a GitHub Release and in the Island package-center catalog for `island/mujoco-sim`. The older v0.1.0 entry remains in the legacy catalog schema; v1.0.1 uses an IsOS schema v4 manifest.
 
 `tools/build-package-release.py` assembles a local candidate for the curated
 Island package center. It runs the existing CTest suite, stages the simulator

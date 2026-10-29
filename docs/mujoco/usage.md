@@ -39,7 +39,7 @@ The Unix sockets are owner-only (`0600`). Use a private runtime directory for ev
 
 ## EOS and EGIA
 
-IsOS installs the `island/mujoco-sim` backend package and activates it through the deployment graph. The v1.0.1 GitHub Release is available; its package-center entry has not been published yet. After catalog publication, install the exact approved version with IsOS:
+IsOS installs the `island/mujoco-sim` backend package and activates it through the deployment graph. The v1.0.1 GitHub Release and package-center entry are published. Install the exact approved version with IsOS:
 
 ```sh
 isos packages search mujoco
