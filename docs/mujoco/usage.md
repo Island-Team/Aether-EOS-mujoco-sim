@@ -39,18 +39,56 @@ The Unix sockets are owner-only (`0600`). Use a private runtime directory for ev
 
 ## EOS and EGIA
 
-EOS can install the published `island/mujoco-sim` v0.1.0 release through its package client. Set `MUJOCO_ROOT` to a separate MuJoCo 3.16.0 installation, then run these commands from the Island-eos checkout:
+IsOS installs the `island/mujoco-sim` backend package and activates it through the deployment graph. The v1.0.1 GitHub Release is available; its package-center entry has not been published yet. After catalog publication, install the exact approved version with IsOS:
 
 ```sh
-./bin/island-pkg search mujoco
-./bin/island-pkg doctor island/mujoco-sim
-./bin/island-pkg install island/mujoco-sim
-./bin/island-pkg activate island/mujoco-sim
+isos packages search mujoco
+isos backends install island/mujoco-sim --version 1.0.1
 ```
 
-`doctor` checks host requirements. `install` checks the archive size and SHA-256 against the published manifest. `activate` writes a separate EOS configuration bundle and prints the launch command; review that bundle and run the printed command with `--simulator`. See the [EOS package usage guide](https://github.com/Island-Team/Island-eos/blob/master/docs/eos/usage/ext/mujoco.md).
+`isos backends install` checks the platform, archive size, and SHA-256 against the approved manifest. Add a backend node with the exact package ID and version, `owned: false`, and an EOS-to-backend `backend_attachment` edge to the IsOS deployment graph. Do not set `settings.sidecar_of` on this backend. Add `MUJOCO_ROOT` to the EOS node's `launch.env`; IsOS passes that environment to EOS, which launches the packaged simulator from its generated module. Then run `isos config validate` and `isos config apply`, followed by an explicit EOS start or restart.
 
-For a source checkout, EOS can still launch this package through its simulator wrapper. Copy `../Island-eos/etc/eos/eos.mujoco.toml` to the local EOS `etc/eos/eos.toml` after preserving your current configuration. In EOS `etc/eos/sim.toml`, select the MuJoCo backend and set paths for this checkout:
+For a local release candidate before catalog publication, install the exact archive through IsOS's unapproved-manifest path:
+
+```sh
+isos packages install --manifest island-release.json --asset mujoco-sim-v1.0.1-linux-x86_64.tar.gz --allow-unapproved
+```
+
+Configure an IsOS graph like this, replacing the EOS executable, config, and MuJoCo root paths with the local installation paths:
+
+```json
+{
+  "schema_version": 1,
+  "name": "default",
+  "nodes": [
+    {
+      "id": "eos",
+      "kind": "component",
+      "role": "eos",
+      "enabled": true,
+      "contract": "island.eos.v1",
+      "launch": {
+        "command": ["/path/to/Island-eos/bin/eosd", "--config", "/path/to/eos.toml"],
+        "env": {"MUJOCO_ROOT": "/path/to/mujoco-3.16.0"}
+      },
+      "settings": {
+        "eos_config": "/path/to/eos.toml",
+        "north_http_url": "http://127.0.0.1:16005"
+      }
+    },
+    {
+      "id": "mujoco",
+      "kind": "backend",
+      "enabled": true,
+      "owned": false,
+      "package": {"id": "island/mujoco-sim", "version": "1.0.1"}
+    }
+  ],
+  "edges": [{"from": "eos", "to": "mujoco", "kind": "backend_attachment"}]
+}
+```
+
+For a source checkout, use the same package module with the local `MUJOCO_ROOT` in the IsOS EOS node's `launch.env`. See the [IsOS package guide](https://github.com/Island-Team/isos/blob/master/docs/isos/usage/packages.md) and [deployment graph contract](https://github.com/Island-Team/isos/blob/master/docs/isos/interfaces/deployment-graph.md).
 
 ```toml
 [simulator]
@@ -64,8 +102,8 @@ height_px = 480
 fps = 30
 
 [simulator.mujoco]
-executable = "/absolute/path/to/Aether-EOS-mujoco-sim/build/eos-mujoco-sim"
-scene = "/absolute/path/to/Aether-EOS-mujoco-sim/assets/scene.xml"
+executable = "/absolute/path/to/isos-mujoco-sim/build/eos-mujoco-sim"
+scene = "/absolute/path/to/isos-mujoco-sim/assets/scene.xml"
 ```
 
 Keep EOS's existing loopback `host` and `port` settings in the same `[simulator]` table. Replace only the `scene` path with `assets/scenes/navigation/scene.xml` to select navigation. EOS rejects unknown keys and other camera settings for MuJoCo. Launch from the EOS checkout with `./eos-launch.sh --simulator`; its wrapper passes both socket paths and the selected scene to this executable. Restart the simulator to change scenes.

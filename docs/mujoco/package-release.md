@@ -1,6 +1,6 @@
 # Island package release
 
-Version 0.1.0 is published in the Island package center as `island/mujoco-sim`. Version 1.0.1 is the IsOS backend package candidate; the published version remains immutable.
+Version 1.0.1 is published as a GitHub Release for `island/mujoco-sim`. Its package-center catalog entry has not been published yet. The older v0.1.0 entry remains in the legacy catalog schema; use an IsOS schema v4 manifest for the v1.0.1 package.
 
 `tools/build-package-release.py` assembles a local candidate for the curated
 Island package center. It runs the existing CTest suite, stages the simulator
@@ -30,7 +30,7 @@ machine before approval.
 
 The builder writes `island-release.<arch>.draft.json` using IsOS release schema v4. Its `assets` entry records the tested Linux architecture and minimum glibc, while `source_commit`, SHA-256, and byte size identify the exact source and archive. Build each target natively, review both drafts and assets, and combine only qualified target entries into the final `island-release.json` uploaded with the GitHub `v1.0.1` release. Do not claim an architecture or Ubuntu version that was not tested.
 
-The activation bundle now contains `module.toml`, `eos.toml`, and `binding.toml` from the current EOS layout. IsOS installs the backend but stages activation until `isos config apply`; it never edits an operator's active deployment on download. The manager launches the packaged `eos-mujoco-sim` directly, with its sockets under the deployment run directory. MuJoCo 3.16.0 remains an operator-provided dependency.
+The activation bundle contains `module.toml`, `eos.toml`, and `binding.toml` from the current EOS layout. IsOS installs the backend but stages activation until `isos config apply`; it never edits an operator's active deployment on download. The generated EOS module launches the packaged `eos-mujoco-sim` with sockets under the deployment run directory. MuJoCo 3.16.0 remains an operator-provided dependency. Set `MUJOCO_ROOT` in the IsOS-managed EOS node's `launch.env` so EOS passes the MuJoCo installation root to the child simulator process.
 
 After uploading, verify the release source, asset bytes, licenses, digest, requirements, and EOS behavior. A member's submission needs an independent reviewer before publication; a developer can publish a complete manifest directly. A changed binary needs a new version.
 
