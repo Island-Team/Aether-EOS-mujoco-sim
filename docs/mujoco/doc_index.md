@@ -1,7 +1,7 @@
 # Documentation map
 
 - [Usage](usage.md): build, direct launcher, scene viewer, EOS configuration, and verification.
-- [Package release](package-release.md): published v0.1.0 and assembling a new Island package asset.
+- [Package release](package-release.md): IsOS v1.0.1 release asset and package-center publication status.
 - [Design](design.md): scene selection, engine ownership, EOS and EGIA boundaries, and package activation.
 - [Benchmarks](benchmarks.md): task catalog, agent evaluation method, provenance, and adding a scene.
 - [EOS simulator interface](interfaces/simulator.md): robot-facing private RPC consumed by EOS.
