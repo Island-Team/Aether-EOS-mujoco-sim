@@ -12,7 +12,7 @@ Build on each target machine separately. Supply the minimum glibc version
 established for that binary and only Ubuntu versions actually tested there:
 
 ```sh
-python3 tools/build-package-release.py \
+python3.12 tools/build-package-release.py \
   --version 1.0.1 \
   --build-dir build \
   --eos-root ../Island-eos \
@@ -24,7 +24,7 @@ python3 tools/build-package-release.py \
 The archive contains `bin/eos-mujoco-sim` as a launcher. It requires an
 operator-provided MuJoCo 3.16.0 installation and `MUJOCO_ROOT` pointing at its
 root directory. The archive includes neither the MuJoCo library nor EOS. The
-candidate manifest lists all SONAMEs reported by `ldd`; `island-pkg doctor`
+candidate manifest lists all SONAMEs reported by `ldd`; `isos packages doctor`
 checks them before installation. Review the full list and the actual target
 machine before approval.
 
