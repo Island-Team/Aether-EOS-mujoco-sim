@@ -1,6 +1,10 @@
 # Coding Conventions
 
-**Convention version: 1.1.0**
+[中文](../../docs_cn/island/conventions.v1.2.0_cn.md)
+
+**Convention version: 1.2.0**
+
+This standalone simulator follows the Island team convention v1.2.0. Adapt EOS-specific paths and release workflow to this repository.
 
 General coding conventions and practices. Adapt paths, tooling, and optional sections to each repository.
 
@@ -17,7 +21,7 @@ When a component-specific note under `docs/<component>/` conflicts with this fil
 
 Island is the team, Aether is the product version, and EOS is a component. Use each name for its role; keep established wire names for compatibility. See [Aether EOS contracts](https://github.com/Island-Team/Island-eos/blob/master/docs/island/contracts_aether.md).
 
-This document has its own version, independent of the EOS product version. Replacing or removing an established rule increments the major version; new compatible guidance increments the minor version; clarifications and corrections increment the patch version. Update the English and Chinese versions together in one PR, record the new version in both headers, and describe the rule change in the PR. Version 1.1.0 records the private development and public publishing rules below; earlier revisions remain available in Git history.
+This document has its own version, independent of the EOS product version. Replacing or removing an established rule increments the major version; new compatible guidance increments the minor version; clarifications and corrections increment the patch version. Update the English and Chinese versions together in one PR, record the new version in both headers, and describe the rule change in the PR. Version 1.2.0 adds first-use introductions and the task-based documentation catalog; earlier revisions remain available in Git history.
 
 ---
 
@@ -35,9 +39,11 @@ Doc-only changes use `docs:` commits; mixed code and documentation changes use t
 
 Write like an article: one idea per paragraph, with headings that help readers follow the subject. Prefer prose and occasional **bold emphasis**. Use bullets for genuine sequences or checklists and tables only when they clarify a comparison. Avoid repeated inline code marks, decorative diagrams, large fenced blocks, and a mandatory Contents list or fixed page template. Short fenced payload examples are useful when exact syntax matters. Write each prose paragraph on one physical source line; do not wrap Markdown to an 80-column limit. Let the viewer wrap it. Preserve line breaks that carry Markdown meaning, such as code blocks, tables, lists, and intentional hard breaks.
 
-Hand-written docs live under the owning component. Organize EOS pages by reader task: `usage/` for setup and operation, `develop/` for interfaces and extension authoring, `design/` for architecture and runtime internals, and `chore/` for release work. Keep a short component `README.md` and `doc_index.md` at the root. The `docs_cn/` tree mirrors the English hierarchy, with `_cn` before the extension; translations retain the same structure and API names and link to each other near the top. Update both when behavior changes. Do not edit generated references by hand.
+Hand-written docs live under the owning product or component. `docs/README.md` introduces the catalog; `docs/island/README.md` introduces the product and its core projects before the EOS guide. Organize EOS pages by reader task: `usage/` for setup and operation, `debug/` for running problems, `develop/` for module and extension authoring, `interfaces/` for contracts, `design/` for architecture and runtime internals, and `maintenance/` for release work. Keep one short component `README.md` as the entry point. The `docs_cn/` tree mirrors the English reading path, with `_cn` before the extension; translations retain the same API names and link to each other near the top. Update both when behavior changes. Do not edit generated references by hand.
 
-**All hand-written interface contracts belong only in an `interfaces` folder under the owning component's documentation tree**, such as `docs/island/interfaces/`, `docs/eos/develop/interfaces/`, and their `docs_cn/` mirrors. This applies to HTTP, WebSocket, RPC, IPC, plugin, skill, and hardware-facing interfaces. Design pages may explain why an interface exists and link to its contract, but should not duplicate payload definitions.
+Introduce a product, process, tool, module, or specialized term before the reader first needs it. Give its role in one sentence and link to its detailed page on first mention. A standalone page also needs enough context to be understood when opened directly; do not require the reader to infer an unexplained name from a path or prior page.
+
+**All hand-written interface contracts belong only in an `interfaces` folder under the owning component's documentation tree**, such as `docs/island/interfaces/`, `docs/eos/interfaces/`, and their `docs_cn/` mirrors. This applies to HTTP, WebSocket, RPC, IPC, plugin, skill, and hardware-facing interfaces. Design pages may explain why an interface exists and link to its contract, but should not duplicate payload definitions.
 
 An interface page identifies callers and owners, invocation or transport, input and output, lifecycle, and observable errors. **Show payloads with small, valid examples** using actual wire field names and values. Include both request and response when applicable, and an error example when useful. Explain constraints beside examples instead of repeating their fields in a table. Synchronize examples with schemas, headers, handlers, and tests. Document current behavior in present tense and plans explicitly as future work.
 
@@ -137,7 +143,13 @@ A typical stack uses TypeScript (strict), React with functional components, SCSS
 
 **Styling.** Prefer design tokens (`var(--token)`) over raw colors in components. When the project supports themes, define tokens in a central theme file and apply via a provider or root attributes. Aim for WCAG AA contrast.
 
-**Responsive.** Mobile-first breakpoints via a shared mixin or media-query helper. Grid for page shells; Flexbox inside components. Touch targets ≥ 44×44 px.
+**Visual consistency.** Reuse the product's shared theme, typography, spacing, controls, and status treatments across pages. A feature may have its own layout, but it should still look like the same frontend. Prefer translucent surfaces and subtle separators when grouping data; solid cards and visible frames are appropriate where they clarify structure or interaction. Keep a small, shared set of font families and text roles. Match line height and container size to the text so letters and labels are never clipped or obscured.
+
+**Controls and preferences.** Standard desktop buttons should be about 30 px tall, matching the existing controls. Preserve at least 44×44 px targets on touch devices. Use the application's existing owners for language, time zone, date and number formats, theme, and other global preferences. A page should not create its own competing preference state or visual rules.
+
+**Audience and density.** Choose information density by task and reader. A developer console or service, job, or domain administration page should make operational facts easy to scan: concise rows, aligned labels and values, and bounded scrolling for long lists. A client or general guest page may use more space for explanation and visual presentation. Keep important information available at narrow widths, even when a compact desktop row must wrap or disclose details.
+
+**Responsive.** Mobile-first breakpoints via a shared mixin or media-query helper. Grid for page shells; Flexbox inside components. On touch devices, interactive targets are at least 44×44 px.
 
 **Networking.** Centralize HTTP and WebSocket logic in a `services/` (or equivalent) layer. When APIs change, update the matching doc below the owning component's `docs/` root.
 
@@ -287,9 +299,9 @@ Services and tools talk to runtime through **public contracts** (RPC, IPC, or HT
 
 Hand-written docs live under `docs/{island,egia,eos}/`. Generated API detail (Doxygen, Sphinx, rustdoc) goes to a generated output directory; never edit it by hand. Link to it from module docs instead of duplicating every signature.
 
-Public EOS interface definitions are authored in focused proto files under `share/contracts/eos/`. JSON Schemas and the manifest under `share/ext/eos/`, and the optional `share/ext/north_http/openapi.json`, are generated artifacts. Change the proto source and regenerate; do not patch generated JSON.
+Public EOS interface definitions are authored in focused proto files under `share/eos/contracts/eos/`. JSON Schemas and the manifest under `share/eos/schemas/eos/`, and the optional `share/ext/north-http/openapi/north-http/openapi.json`, are generated artifacts. Change the proto source and regenerate; do not patch generated JSON.
 
-Canonical roles: the product **layout** lives at `docs/island/layout.md`; component **doc maps** live at `docs/<component>/doc_index.md`; EOS pages use `usage/`, `develop/`, `design/`, and `chore/`. The doc map is the navigation index.
+Canonical roles: the product introduction lives at `docs/island/README.md`; each component has one `README.md` catalog. EOS pages use `usage/`, `debug/`, `develop/`, `interfaces/`, `design/`, and `maintenance/`. The component README is the navigation index.
 
 **New or redesigned module**
 
@@ -371,7 +383,7 @@ Merge through a PR. Name a fix PR `fix: <brief description> (#<index>)`, for exa
 
 ### Private development and public releases
 
-For EOS, the private `Island-eos` repository owns development history, and the public `Aether-EOS-R` repository owns its own release history. Use private branches and PRs for development. Publish reviewed source snapshots through public PRs based on the public branch; never push, merge, cherry-pick, or mirror private commits or tags into the public repository. Follow the EOS publishing procedure in the Island-eos repository for remote setup, review, and public contributions.
+For EOS, the private `Island-eos` repository owns development history, and the public `Aether-EOS-R` repository owns its own release history. Use private branches and PRs for development. Publish reviewed source snapshots through public PRs based on the public branch; never push, merge, cherry-pick, or mirror private commits or tags into the public repository. Follow the [EOS publishing procedure](../eos/maintenance/publish.md) for remote setup, review, and public contributions.
 
 The product release version is set in the root `CMakeLists.txt` and reflected in generated API documentation. A release version bump does not automatically change primitive versions, schema versions, or skill ABI versions; change those only when their own contracts change. Create a public release tag only after the corresponding public commit is merged.
 

@@ -6,4 +6,4 @@
 - [Benchmarks](benchmarks.md): task catalog, agent evaluation method, provenance, and adding a scene.
 - [EOS simulator interface](interfaces/simulator.md): robot-facing private RPC consumed by EOS.
 - [Benchmark interface](interfaces/benchmark.md): evaluator-only reset, clock, ground truth, and scoring RPC.
-- [Island conventions](../island/conventions.v1.1.0.md): copied team rules applied by `AGENTS.md`.
+- [Island conventions](../island/conventions.v1.2.0.md): copied team rules applied by `AGENTS.md`.
