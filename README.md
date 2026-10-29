@@ -1,6 +1,6 @@
 # EOS MuJoCo benchmark simulator
 
-[GitHub repository](https://github.com/Island-Team/Aether-EOS-mujoco-sim)
+[GitHub repository](https://github.com/Island-Team/isos-mujoco-sim)
 
 This independent C++ package runs robotic benchmark scenes in MuJoCo. EOS connects to its simulator socket and exposes normal robot discovery, observations, and primitives to agents such as EGIA. A trusted evaluator alone connects to the separate benchmark socket for seeded resets, manual stepping, ground truth, and scores.
 
@@ -8,12 +8,14 @@ The catalog starts with [pick and place](assets/scene.xml) and [navigation](asse
 
 ## Quick start
 
-For EOS, install the published `island/mujoco-sim` v0.1.0 package with the
-[Island package client](https://github.com/Island-Team/Island-eos/blob/master/docs/eos/usage/ext/mujoco.md).
-Run `doctor`, `install`, and `activate` from the Island-eos checkout. Activation
-prints a launch command using a separate configuration bundle, so the current
-EOS configuration stays intact. MuJoCo 3.16.0 is still installed separately;
-set `MUJOCO_ROOT` to its installation root.
+For an IsOS deployment, install the approved `island/mujoco-sim` backend package
+with `isos backends install`, then select its exact version in the deployment
+graph and run `isos config apply`. The Island-eos `bin/island-pkg` compatibility
+client forwards package-center search and install commands to IsOS when it is
+available. The v1.0.1 release candidate is not published; see
+[package release](docs/mujoco/package-release.md) to build and verify it locally.
+MuJoCo 3.16.0 remains an operator-provided dependency; set `MUJOCO_ROOT` to its
+installation root.
 
 The following source build is useful for development and direct runs.
 

@@ -15,7 +15,7 @@ import tempfile
 
 
 ROOT = Path(__file__).resolve().parents[1]
-SOURCE = "https://github.com/Island-Team/Aether-EOS-mujoco-sim"
+SOURCE = "https://github.com/Island-Team/isos-mujoco-sim"
 VERSION = re.compile(r"[0-9]+\.[0-9]+\.[0-9]+")
 
 
