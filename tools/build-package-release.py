@@ -36,7 +36,7 @@ def template(source: Path, target: Path, replacements: dict[str, str]) -> None:
     target.write_text(content)
 
 
-def stage_release(stage: Path, binary: Path, eos_root: Path) -> None:
+def stage_release(stage: Path, binary: Path, eos_root: Path, version: str) -> None:
     (stage / "bin").mkdir()
     shutil.copy2(binary, stage / "bin/eos-mujoco-sim.real")
     (stage / "bin/eos-mujoco-sim.real").chmod(0o755)
@@ -53,21 +53,31 @@ def stage_release(stage: Path, binary: Path, eos_root: Path) -> None:
     wrapper.chmod(0o755)
     shutil.copytree(ROOT / "assets", stage / "assets")
     shutil.copy2(ROOT / "LICENSE", stage / "LICENSE")
-    template(checked_path(eos_root, "etc/eos/eos.mujoco.toml"), stage / "config/eos.toml", {})
-    template(checked_path(eos_root, "etc/eos/sim.toml"), stage / "config/sim.toml", {
-        'backend = "demo"': 'backend = "mujoco"',
-        'width_px = 1920': 'width_px = 640',
-        'height_px = 1080': 'height_px = 480',
+    template(checked_path(eos_root, "etc/ext/mujoco/eos.toml"), stage / "config/eos.toml", {
+        'backend = "../ext/mujoco/binding.toml"': 'backend = {{package_file:config/binding.toml}}',
     })
-    sim = stage / "config/sim.toml"
-    sim.write_text("\n".join(
-        line for line in sim.read_text().splitlines()
-        if "/home/" not in line and "# [simulator.mujoco]" not in line
-    ) + "\n")
-    with sim.open("a") as out:
-        out.write('\n[simulator.mujoco]\nexecutable = {{package_executable}}\nscene = {{package_scene}}\n')
-    (stage / "config/backends").mkdir(parents=True)
-    shutil.copy2(checked_path(eos_root, "etc/eos/backends/mujoco.toml"), stage / "config/backends/mujoco.toml")
+    shutil.copy2(checked_path(eos_root, "etc/ext/mujoco/binding.toml"), stage / "config/binding.toml")
+    (stage / "config/module.toml").write_text(
+        'version = 1\n\n'
+        '[module]\n'
+        'id = "island--mujoco-sim"\n'
+        'package = "island/mujoco-sim"\n'
+        f'version = "{version}"\n'
+        'enabled = true\n\n'
+        '[[service]]\n'
+        'name = "mujoco-sim"\n'
+        'role = "managed"\n'
+        'command = [{{package_file:bin/eos-mujoco-sim}}, "--socket", "{run}/simulator.sock", '
+        '"--benchmark-socket", "{run}/benchmark.sock", "--scene", '
+        '{{package_file:assets/scene.xml}}]\n'
+        'ready_unix = "{run}/simulator.sock"\n'
+        'timeout_ms = 30000\n\n'
+        '[[binding]]\n'
+        'backend = {{package_file:config/binding.toml}}\n'
+        'profile = "mujoco"\n'
+        'requires = ["mujoco-sim"]\n'
+        'eos_after = ["mujoco-sim"]\n'
+    )
 
 
 def required_libraries(binary: Path) -> list[str]:
@@ -132,37 +142,43 @@ def main() -> None:
     archive = args.output / asset_name
     with tempfile.TemporaryDirectory(prefix="island-mujoco-package-") as tmp:
         stage = Path(tmp)
-        stage_release(stage, binary, args.eos_root)
+        stage_release(stage, binary, args.eos_root, args.version)
         with tarfile.open(archive, "w:gz") as tar:
             for file in sorted(stage.rglob("*")):
                 tar.add(file, arcname=file.relative_to(stage).as_posix(), recursive=False)
     with archive.open("rb") as stream:
         digest = hashlib.file_digest(stream, "sha256").hexdigest()
     url = f"{SOURCE}/releases/download/v{args.version}/{asset_name}"
+    source_commit = subprocess.run(
+        ["git", "rev-parse", "HEAD"], cwd=ROOT, check=True, capture_output=True, text=True
+    ).stdout.strip()
     manifest = {
-        "schema_version": 1,
+        "schema_version": 4,
         "id": "island/mujoco-sim",
-        "kind": "extension",
+        "kind": "backend",
         "version": args.version,
         "description": "MuJoCo benchmark simulator for EOS",
+        "source_commit": source_commit,
         "source_url": SOURCE,
         "release_url": f"{SOURCE}/releases/tag/v{args.version}",
         "license": "Apache-2.0",
+        "contracts": ["eos.simulator.v1"],
         "assets": [{
             "name": asset_name, "url": url, "sha256": digest,
             "size_bytes": archive.stat().st_size, "os": "linux", "arch": arch,
-            "glibc_min": args.glibc_min, "eos_contract": "eos.simulator.v1",
+            "libc": f"glibc>={args.glibc_min}",
             "required_libraries": libraries,
             "tested_ubuntu": args.tested_ubuntu,
         }],
-        "config_inputs": [],
         "activation": {
-            "entrypoint": "bin/eos-mujoco-sim", "scene": "assets/scene.xml",
-            "eos_template": "config/eos.toml", "simulator_template": "config/sim.toml",
-            "backend_template": "config/backends/mujoco.toml",
+            "files": [
+                {"source": "config/module.toml", "destination": "module.toml"},
+                {"source": "config/eos.toml", "destination": "eos.toml"},
+                {"source": "config/binding.toml", "destination": "binding.toml"},
+            ],
         },
     }
-    draft = args.output / f"{asset_name}.manifest.draft.json"
+    draft = args.output / f"island-release.{arch}.draft.json"
     draft.write_text(json.dumps(manifest, indent=2) + "\n")
     print(f"Built {archive}\nSHA-256 {digest}\nDraft {draft}")
     if args.skip_tests:
