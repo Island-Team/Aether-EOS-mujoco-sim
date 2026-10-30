@@ -5,7 +5,7 @@
 Build the simulator and stage a local `island/mujoco-sim@2.0.0` bundle:
 
 ```sh
-. ./.env
+export MUJOCO_ROOT=/absolute/path/to/mujoco-3.16.0
 cmake -S . -B build -DMUJOCO_ROOT="$MUJOCO_ROOT"
 cmake --build build -j
 ctest --test-dir build --output-on-failure
@@ -21,7 +21,7 @@ and the external MuJoCo 3.16.0 library requirement. IsOS verifies the scene,
 assets, executable, and library before run and supplies the library directory
 to the child process. Package installation alone does not activate a graph.
 
-The release's `node_contributions` declares a `sim-hardware` node set. It adds the EOS-owned simulator process under `process/mujoco` and camera, base, and manipulator nodes under `hardware/mujoco`. IsOS catalogs the set after install or link; preview binds the scene and owner-only socket, resolves its symbolic node references, and validates the resulting shared graph. The applied graph pins `island/mujoco-sim@2.0.0`. The release declaration is a reusable source for drafting nodes, not a second live graph.
+The release's `node_contributions` declares a `sim-hardware` node set. It adds the EOS-owned simulator process under `process/mujoco` and camera, base, and manipulator nodes under `hardware/mujoco`. It also links the camera to a built-in EOS camera gate under `interface/gate` and makes that gate the default source of a built-in IsosUI Vision node under `system/ui`. IsOS catalogs the set after install or link; preview binds the scene and owner-only socket, resolves its symbolic node references, and validates the resulting shared graph. Only the four package-contributed MuJoCo nodes carry the `island/mujoco-sim@2.0.0` package pin; the gate and Vision nodes use their own built-in contracts. The release declaration is a reusable source for drafting nodes, not a second live graph. Vision can select another active compatible gate at runtime without changing this default edge.
 
 The backend node's `settings.env` can contain `MUJOCO_GUI=1` or
 `MUJOCO_GUI=true`. This opens an X11 window titled `IsOS MuJoCo — live

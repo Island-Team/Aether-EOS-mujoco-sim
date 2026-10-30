@@ -5,6 +5,8 @@ BACKEND = "eos.process.mujoco@v1.0"
 CAMERA = "eos.hardware.mujoco_camera@v1.0"
 BASE = "eos.hardware.mujoco_base@v1.0"
 MANIPULATOR = "eos.hardware.mujoco_manipulator@v1.0"
+CAMERA_GATE = "eos.interface.camera_gate@v1.0"
+VISION = "isosui.system.vision@v1.0"
 DISPATCHER = "cores/eos/layers/dispatcher/groups/control/nodes/command"
 
 
@@ -144,6 +146,20 @@ def contributions() -> dict:
          "profile": base},
         {"ref": "arm", "core": "eos", "layer": "hardware", "group": "mujoco",
          "profile": arm},
+        {"ref": "camera_gate", "core": "eos", "layer": "interface", "group": "gate",
+         "profile": {
+           "id": "front-preview", "node_type": CAMERA_GATE,
+           "label": "Front camera preview gate",
+           "description": "Publishes a bounded preview of the MuJoCo front camera",
+           "inputs": {"frame": {"node": "@front", "output": "frame"}},
+         }},
+        {"ref": "vision", "core": "isosui", "layer": "system", "group": "ui",
+         "profile": {
+           "id": "vision", "node_type": VISION,
+           "label": "Vision monitor",
+           "description": "Displays a selected active camera gate in IsosUI",
+           "inputs": {"preview": {"node": "@camera_gate", "output": "preview"}},
+         }},
       ],
     }],
   }

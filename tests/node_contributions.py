@@ -26,16 +26,32 @@ class NodeContributionTests(unittest.TestCase):
     contract = contributions()
     node_set = contract["node_sets"][0]
     refs = {node["ref"] for node in node_set["nodes"]}
-    self.assertEqual(refs, {"simulator", "front", "drive", "arm"})
-    self.assertEqual(len(contract["node_types"]), len(node_set["nodes"]))
+    self.assertEqual(refs, {"simulator", "front", "drive", "arm", "camera_gate", "vision"})
+    contributed_types = {node_type["id"] for node_type in contract["node_types"]}
+    self.assertEqual(len(contributed_types), 4)
     declared = set(node_set["parameters"])
     for node in node_set["nodes"]:
-      self.assertEqual(node["group"], "mujoco")
+      if node["profile"]["node_type"] in contributed_types:
+        self.assertEqual(node["core"], "eos")
+        self.assertEqual(node["group"], "mujoco")
       for value in strings(node["profile"]):
         if value.startswith("@"):
           self.assertIn(value[1:], refs)
         for parameter in re.findall(r"\$\{([^}]+)\}", value):
           self.assertIn(parameter, declared)
+
+  def test_vision_uses_a_typed_gate_with_an_editable_default_source(self) -> None:
+    nodes = {node["ref"]: node for node in contributions()["node_sets"][0]["nodes"]}
+    gate = nodes["camera_gate"]
+    vision = nodes["vision"]
+    self.assertEqual(gate["profile"]["inputs"]["frame"],
+                     {"node": "@front", "output": "frame"})
+    self.assertEqual(vision["profile"]["inputs"]["preview"],
+                     {"node": "@camera_gate", "output": "preview"})
+    self.assertEqual((gate["core"], gate["layer"], gate["group"]),
+                     ("eos", "interface", "gate"))
+    self.assertEqual((vision["core"], vision["layer"], vision["group"]),
+                     ("isosui", "system", "ui"))
 
   def test_every_actuator_type_has_a_matching_stop_contract(self) -> None:
     contract = contributions()
