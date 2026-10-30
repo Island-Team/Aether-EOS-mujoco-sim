@@ -4,7 +4,7 @@
 
 ## Aether v2 node candidate
 
-`tools/build-backend-bundle.py` stages the local `island/mujoco-sim@2.0.0` backend, a schema v4 `release.json`, and a checksummed archive. Its optional `node_contributions` declares four package-owned EOS node types and the `sim-hardware` node set. IsOS verifies the release and lists the nodes after install or link; graph preview and apply remain explicit operator actions. The backend descriptor still owns executable, scene, device, and MuJoCo library metadata. See the [v2 backend guide](backend-v2.md) for build and validation steps.
+`tools/build-backend-bundle.py` stages the local `island/mujoco-sim@2.0.0` backend, a schema v4 `release.json`, and a checksummed archive. Its optional `node_contributions` declares four package-owned EOS node types and the `sim-hardware` node set. The set also references built-in EOS gate and IsosUI Vision types to provide an initial camera preview path; these types are not package-owned. IsOS verifies the release and lists the nodes after install or link; graph preview and apply remain explicit operator actions. The backend descriptor still owns executable, scene, device, and MuJoCo library metadata. See the [v2 backend guide](backend-v2.md) for build and validation steps.
 
 ## Earlier published release
 

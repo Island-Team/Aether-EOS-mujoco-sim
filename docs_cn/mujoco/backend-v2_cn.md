@@ -5,7 +5,7 @@
 先构建模拟器，再生成本地 `island/mujoco-sim@2.0.0` 包：
 
 ```sh
-. ./.env
+export MUJOCO_ROOT=/absolute/path/to/mujoco-3.16.0
 cmake -S . -B build -DMUJOCO_ROOT="$MUJOCO_ROOT"
 cmake --build build -j
 ctest --test-dir build --output-on-failure
@@ -16,7 +16,7 @@ isos pkg link island/mujoco-sim 2.0.0 /absolute/path/to/mujoco-v2-bundle --manif
 
 包中包含 `bin/eos-mujoco-sim`、两个场景及其资源、`backend-v2.json` 和本地 schema v4 `release.json`。构建工具还会在包目录旁生成带 SHA-256 校验值的发布归档。后端描述文件声明 `mujoco-v2` 协议、`cam-0`、`base-0`、`arm-0` 设备 ID，以及外部 MuJoCo 3.16.0 库依赖。IsOS 在运行前验证可执行文件、场景、资源和库；安装包本身不会启用部署图。
 
-发布清单中的 `node_contributions` 声明 `sim-hardware` 节点集：`process/mujoco` 下的 EOS 模拟器进程，以及 `hardware/mujoco` 下的相机、底盘和机械臂节点。安装或链接后，IsOS 将节点集加入目录；预览时绑定场景与仅所有者可访问的套接字、解析符号节点引用，并验证生成的共享图。已应用的图固定使用 `island/mujoco-sim@2.0.0`。发布声明只用于生成节点草稿，不是第二份运行图。
+发布清单中的 `node_contributions` 声明 `sim-hardware` 节点集：`process/mujoco` 下的 EOS 模拟器进程，以及 `hardware/mujoco` 下的相机、底盘和机械臂节点。这些类型明确要求使用 `mujoco` 组；本包省略 `group` 时的通用默认值是 `mujoco-sim`。端口声明还提供预期采样频率、传输边界和数据类别，供图编辑器使用。节点集还将相机连接到 `interface/gate` 下的内置 EOS 相机门节点，并把该门节点设为 `system/ui` 下内置 IsosUI Vision 节点的默认来源。安装或链接后，IsOS 将节点集加入目录；预览时绑定场景与仅所有者可访问的套接字、解析符号节点引用，并验证生成的共享图。只有四个由 MuJoCo 包提供的节点固定使用 `island/mujoco-sim@2.0.0` 包引用；门节点和 Vision 节点采用各自的内置契约。发布声明只用于生成节点草稿，不是第二份运行图。Vision 可在运行时选择其他活跃且兼容的门节点，而无须改变默认连接。
 
 后端节点的 `settings.env` 可设置 `MUJOCO_GUI=1` 或 `MUJOCO_GUI=true`，在支持 X11 的主机上打开 `IsOS MuJoCo — live simulation` 窗口。窗口渲染来自同一个 `SimEngine` 的相机画面；默认不显示 GUI。若请求 GUI 但显示服务不可用，模拟器启动失败。`tools/scene-view.sh` 仍用于独立的静态场景预览。
 
@@ -37,3 +37,7 @@ v2 Unix 套接字帧以八字节小端长度头开头，后接 JSON 元数据和
 ## 验证
 
 2026-10-30 的现有基线在 Ubuntu 和 MuJoCo 3.16.0 上通过了十个 CTest 用例。`tests/v2.py` 覆盖 JPEG 捕获、底盘运动、六关节命令、安全停止和套接字清理。GUI 检查还验证了可见窗口、运动后像素变化，以及显示服务不可用时的启动失败。完整日志保存在本地 `logs/test/2026-10-30-v2-live/`。新增节点声明可用 `python3 tests/node_contributions.py` 检查，并需通过 IsOS 与 EOS 的完整图准入及运行集成测试。
+
+2026-10-30，六节点预设及端口元数据通过 `python3 tests/node_contributions.py` 的四个测试。`python3 tools/build-backend-bundle.py --build-dir build --output logs/test/20261030-general-interfaces/bundle-r3` 成功生成发布候选包，`ctest --test-dir build --output-on-failure` 的十个模拟器测试全部通过。完整本地输出保存在 `logs/test/20261030-general-interfaces/`。
+
+随后，独立的 IsOS 目录链接修正后的 `bundle-r3`，使用场景和套接字参数预览 `sim-hardware`，并通过 EOS `aether-profile` 验证生成的图。预览添加六个节点，只在四个 MuJoCo 类型上保留包引用，并报告三个由 IsOS 管理的进程。复现细节见 `logs/test/20261030-general-interfaces/graph-preview.log`。
