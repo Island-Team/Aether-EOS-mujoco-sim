@@ -4,7 +4,7 @@
 
 ## Aether v2 节点候选包
 
-`tools/build-backend-bundle.py` 生成本地 `island/mujoco-sim@2.0.0` 后端包、schema v4 `release.json` 和带校验值的归档。清单中可选的 `node_contributions` 声明四个由该包提供的 EOS 节点类型及 `sim-hardware` 节点集。该节点集还引用内置 EOS 门节点和 IsosUI Vision 节点类型，以建立初始相机预览路径；这些类型不归 MuJoCo 包所有。IsOS 在安装或链接时验证发布信息并展示节点；图预览与应用仍需操作员明确执行。`backend-v2.json` 继续单独描述可执行文件、场景、设备和 MuJoCo 库依赖。构建与验证步骤见 [v2 后端指南](backend-v2_cn.md)。
+`tools/build-backend-bundle.py` 生成本地 `island/mujoco-sim@2.0.0` 后端包、schema v4 `release.json` 和带校验值的归档。`node_contributions` 声明一个由包提供的模拟器进程类型、`mujoco-v2` 适配器系列，以及 `sim-hardware` 节点集。节点集使用通用 EOS 相机、底盘、机械臂、门和 primitive 绑定类型，并添加 IsOS Vision 面板。每个硬件节点在设置中选择并固定 MuJoCo 适配器；通用类型不归该包所有。IsOS 在安装或链接时验证发布信息并展示节点；图预览与应用仍需操作员明确执行。`backend-v2.json` 继续单独描述可执行文件、场景、设备和 MuJoCo 库依赖。构建与验证步骤见 [v2 后端指南](backend-v2_cn.md)。
 
 ## 先前发布版本
 
