@@ -1,5 +1,7 @@
 # IsOS managed MuJoCo v2 backend
 
+[中文](../../docs_cn/mujoco/backend-v2_cn.md)
+
 Build the simulator and stage a local `island/mujoco-sim@2.0.0` bundle:
 
 ```sh
@@ -7,20 +9,23 @@ Build the simulator and stage a local `island/mujoco-sim@2.0.0` bundle:
 cmake -S . -B build -DMUJOCO_ROOT="$MUJOCO_ROOT"
 cmake --build build -j
 ctest --test-dir build --output-on-failure
+python3 tests/node_contributions.py
 python3 tools/build-backend-bundle.py --output /absolute/path/to/mujoco-v2-bundle
-isos pkg link island/mujoco-sim 2.0.0 /absolute/path/to/mujoco-v2-bundle
+isos pkg link island/mujoco-sim 2.0.0 /absolute/path/to/mujoco-v2-bundle --manifest /absolute/path/to/mujoco-v2-bundle/release.json
 ```
 
 The bundle contains an actual executable at `bin/eos-mujoco-sim`, the two
-supported scenes and their model assets, and `backend-v2.json`. The descriptor
+supported scenes and their model assets, `backend-v2.json`, and a local schema v4 `release.json`. The builder writes a checksummed release archive beside the bundle. The descriptor
 declares the `mujoco-v2` protocol, `cam-0`, `base-0`, and `arm-0` device IDs,
 and the external MuJoCo 3.16.0 library requirement. IsOS verifies the scene,
 assets, executable, and library before run and supplies the library directory
 to the child process. Package installation alone does not activate a graph.
 
+The release's `node_contributions` declares a `sim-hardware` node set. It adds the EOS-owned simulator process under `process/mujoco` and camera, base, and manipulator nodes under `hardware/mujoco`. IsOS catalogs the set after install or link; preview binds the scene and owner-only socket, resolves its symbolic node references, and validates the resulting shared graph. The applied graph pins `island/mujoco-sim@2.0.0`. The release declaration is a reusable source for drafting nodes, not a second live graph.
+
 The backend node's `settings.env` can contain `MUJOCO_GUI=1` or
 `MUJOCO_GUI=true`. This opens an X11 window titled `IsOS MuJoCo — live
-simulation` while IsOS owns the process. It renders camera frames from the
+simulation` while EOS owns the simulator child. It renders camera frames from the
 same `SimEngine` instance controlled by the v2 socket and benchmark socket.
 The default is headless. A desktop with an accessible `DISPLAY` is required;
 an unavailable display makes the simulator fail at startup. The independent
@@ -44,9 +49,7 @@ or `error.message`. Operations refer to the live state:
 
 `timestamp_ns` is simulated time in nanoseconds and `sequence` is the engine
 step count. Values are finite and movement bounds are enforced by the engine.
-The v2 socket is owner-only (`0600`) and removed on normal shutdown. IsOS
-starts and stops the process. EOS reads the graph and connects as a socket
-client; it does not launch the simulator.
+The v2 socket is owner-only (`0600`) and removed on normal shutdown. IsOS verifies the package and passes the executable and scene to EOS. EOS starts the simulator as its direct child, connects its hardware adapters as socket clients, and stops admitted actuators before terminating the simulator.
 
 ## Verification
 
