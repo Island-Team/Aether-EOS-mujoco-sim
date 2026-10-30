@@ -6,6 +6,11 @@ This independent C++ package runs robotic benchmark scenes in MuJoCo. EOS connec
 
 The catalog starts with [pick and place](assets/scene.xml) and [navigation](assets/scenes/navigation/scene.xml). Select one scene at process startup with `--scene` or EOS `[simulator.mujoco].scene`. Read the [documentation map](docs/mujoco/doc_index.md) for setup, benchmark methods, interfaces, model provenance, and the path for adding a scene.
 
+For the IsOS/EOS 2.0.0 graph and framed socket path, use the
+[v2 backend guide](docs/mujoco/backend-v2.md). It stages a local backend
+bundle with `tools/build-backend-bundle.py`. Set `MUJOCO_GUI=1` in the IsOS
+backend node environment to view the running simulator's live state.
+
 ## Quick start
 
 For an IsOS deployment, install the approved `island/mujoco-sim` backend package

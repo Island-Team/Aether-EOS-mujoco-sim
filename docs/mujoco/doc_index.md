@@ -1,5 +1,7 @@
 # Documentation map
 
+- [IsOS managed v2 backend](backend-v2.md): v2 bundle, framed EOS socket, and live GUI.
+
 - [Usage](usage.md): build, direct launcher, scene viewer, EOS configuration, and verification.
 - [Package release](package-release.md): IsOS v1.0.1 release asset and package-center publication status.
 - [Design](design.md): scene selection, engine ownership, EOS and EGIA boundaries, and package activation.
