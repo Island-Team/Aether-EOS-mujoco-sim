@@ -1,5 +1,7 @@
 # Build and run
 
+[中文](../../docs_cn/mujoco/usage_cn.md)
+
 [Package overview](README.md) · [Benchmark tasks](benchmarks.md)
 
 Build the simulator separately from EOS. Install MuJoCo 3.16.0, copy [`.env.example`](../../.env.example) to the ignored `.env`, and set `MUJOCO_ROOT` there to its real installation directory. It must contain `include/mujoco/mujoco.h`, `lib/libmujoco.so`, `bin/compile`, and `bin/simulate`. CMake also needs C++20, protobuf, gRPC, and libjpeg.
@@ -25,7 +27,7 @@ The root scripts manage a standalone simulator in the background. They load the 
 
 `--gui` opens MuJoCo's independent `simulate` viewer for the same XML. It requires a desktop display and the `MUJOCO_ROOT` viewer tools; it does not show the live simulator state or seeded reset variation. `--no-gui` is the default. `--manual-step`, `--run-dir PATH`, and `--executable PATH` override launcher defaults. If you use a custom run directory, pass the same `--run-dir` to `kill.sh`. The stop script checks the recorded process identity and only stops processes started by `launch.sh`; it does not stop EOS-owned simulator processes. Inspect `.run/mujoco/simulator.log` or `viewer.log` if startup fails.
 
-For direct execution without the process scripts, the executable requires three absolute paths. `--scene` chooses one supported profile when the process starts. `--manual-step` starts paused; otherwise the simulator advances at the 2 ms physics step in real time. A benchmark `Reset` also pauses it for deterministic stepping. Both socket paths must differ, and the scene must be a regular file.
+For direct execution without the process scripts, the executable requires absolute paths for its robot socket, benchmark socket, and scene. Add a distinct absolute `--v2-socket` path when testing the current EOS adapter protocol. `--scene` chooses one supported profile when the process starts. `--manual-step` starts paused; otherwise the simulator advances at the 2 ms physics step in real time. A benchmark `Reset` also pauses it for deterministic stepping. Socket paths must differ, and the scene must be a regular file.
 
 ```sh
 build/eos-mujoco-sim \
@@ -37,78 +39,22 @@ build/eos-mujoco-sim \
 
 The Unix sockets are owner-only (`0600`). Use a private runtime directory for evaluation and give the benchmark socket only to the evaluator. Stop the process with `SIGINT` or `SIGTERM`; it removes its sockets on normal shutdown. `--help` prints the available flags.
 
-## EOS and EGIA
+## IsOS and EOS v2
 
-IsOS installs the `island/mujoco-sim` backend package and activates it through the deployment graph. The v1.0.1 GitHub Release and package-center entry are published. Install the exact approved version with IsOS:
-
-```sh
-isos packages search mujoco
-isos backends install island/mujoco-sim --version 1.0.1
-```
-
-`isos backends install` checks the platform, archive size, and SHA-256 against the approved manifest. Add a backend node with the exact package ID and version, `owned: false`, and an EOS-to-backend `backend_attachment` edge to the IsOS deployment graph. Do not set `settings.sidecar_of` on this backend. Add `MUJOCO_ROOT` to the EOS node's `launch.env`; IsOS passes that environment to EOS, which launches the packaged simulator from its generated module. Then run `isos config validate` and `isos config apply`, followed by an explicit EOS start or restart.
-
-For a local release candidate before catalog publication, install the exact archive through IsOS's unapproved-manifest path:
+For the current IsOS/EOS 2.0.0 path, build and link a local `island/mujoco-sim@2.0.0` bundle as described in the [v2 backend guide](backend-v2.md). The published v1.0.1 package uses the retired graph shape; its [release guide](package-release.md) remains for historical installations. MuJoCo 3.16.0 is an operator-provided dependency; set `MUJOCO_ROOT` to the real installation before building the bundle and running the graph.
 
 ```sh
-isos packages install --manifest island-release.json --asset mujoco-sim-v1.0.1-linux-x86_64.tar.gz --allow-unapproved
+python3 tools/build-backend-bundle.py --output /absolute/path/to/mujoco-v2-bundle
+isos init --mode dev
+isos pkg link island/mujoco-sim 2.0.0 /absolute/path/to/mujoco-v2-bundle --manifest /absolute/path/to/mujoco-v2-bundle/release.json
+isos pkg node-sets
 ```
 
-Configure an IsOS graph like this, replacing the EOS executable, config, and MuJoCo root paths with the local installation paths:
+Stage and select EOS and IsosUI builds with `isos build eos`, `isos version select eos <selector>`, `isos build isosui`, and `isos version select isosui <selector>`. A selector identifies one exact receipt; when multiple EOS builds share a commit, use its source fingerprint. `isos init` exits without starting services. Run `isos serve` in a terminal, open the Graph workbench, preview the installed `sim-hardware` node set with the chosen scene and owner-only socket, then Validate and Apply the draft. The preset adds the EOS-owned simulator process, three generic hardware adapters, dispatcher bindings, and typed connections. IsOS preserves an authored graph until the operator applies the new revision.
 
-```json
-{
-  "schema_version": 1,
-  "name": "default",
-  "nodes": [
-    {
-      "id": "eos",
-      "kind": "component",
-      "role": "eos",
-      "enabled": true,
-      "contract": "island.eos.v1",
-      "launch": {
-        "command": ["/path/to/Island-eos/bin/eosd", "--config", "/path/to/eos.toml"],
-        "env": {"MUJOCO_ROOT": "/path/to/mujoco-3.16.0"}
-      },
-      "settings": {
-        "eos_config": "/path/to/eos.toml",
-        "north_http_url": "http://127.0.0.1:16005"
-      }
-    },
-    {
-      "id": "mujoco",
-      "kind": "backend",
-      "enabled": true,
-      "owned": false,
-      "package": {"id": "island/mujoco-sim", "version": "1.0.1"}
-    }
-  ],
-  "edges": [{"from": "eos", "to": "mujoco", "kind": "backend_attachment"}]
-}
-```
+Run `isos run` in another terminal to start the applied deployment. IsOS preflights the exact package, assets, scene, MuJoCo library, EOS executables, sockets, and ports before starting graph children. EOS starts the simulator as its direct child and stops admitted actuators before terminating it. `isos deployment stop` stops the deployment only; `isos stop` shuts down the manager, API, UI, deployment, and independent IsOS services. EGIA uses EOS's normal agent interface and never connects to the private benchmark socket. The service manager for model-like processes is separate from this hardware graph.
 
-For a source checkout, use the same package module with the local `MUJOCO_ROOT` in the IsOS EOS node's `launch.env`. See the [IsOS package guide](https://github.com/Island-Team/isos/blob/master/docs/isos/usage/packages.md) and [deployment graph contract](https://github.com/Island-Team/isos/blob/master/docs/isos/interfaces/deployment-graph.md).
-
-```toml
-[simulator]
-backend = "mujoco"
-map_id = ""
-camera_source = "scene"
-
-[simulator.camera]
-width_px = 640
-height_px = 480
-fps = 30
-
-[simulator.mujoco]
-executable = "/absolute/path/to/isos-mujoco-sim/build/eos-mujoco-sim"
-scene = "/absolute/path/to/isos-mujoco-sim/assets/scene.xml"
-```
-
-Keep EOS's existing loopback `host` and `port` settings in the same `[simulator]` table. Replace only the `scene` path with `assets/scenes/navigation/scene.xml` to select navigation. EOS rejects unknown keys and other camera settings for MuJoCo. Launch from the EOS checkout with `./eos-launch.sh --simulator`; its wrapper passes both socket paths and the selected scene to this executable. Restart the simulator to change scenes.
-
-EGIA connects to the already-running EOS gateway through its normal connection profile. EGIA does not start this process or connect to the benchmark socket. EOS discovery and primitive calls are the agent's action and observation route.
+The v2 package permits `MUJOCO_GUI=1` in the simulator node's `settings.env`. It opens a live X11 view from the same simulator engine used by the v2 socket. The standalone `--gui` launcher below opens a separate static MuJoCo viewer instead. See [backend-v2.md](backend-v2.md) for the node and socket contracts.
 
 ## Timed agent episode
 
