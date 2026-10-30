@@ -1,5 +1,13 @@
 # Island package release
 
+[中文](../../docs_cn/mujoco/package-release_cn.md)
+
+## Aether v2 node candidate
+
+`tools/build-backend-bundle.py` stages the local `island/mujoco-sim@2.0.0` backend, a schema v4 `release.json`, and a checksummed archive. Its optional `node_contributions` declares four package-owned EOS node types and the `sim-hardware` node set. IsOS verifies the release and lists the nodes after install or link; graph preview and apply remain explicit operator actions. The backend descriptor still owns executable, scene, device, and MuJoCo library metadata. See the [v2 backend guide](backend-v2.md) for build and validation steps.
+
+## Earlier published release
+
 Version 1.0.1 is published as a GitHub Release and in the Island package-center catalog for `island/mujoco-sim`. The older v0.1.0 entry remains in the legacy catalog schema; v1.0.1 uses an IsOS schema v4 manifest.
 
 `tools/build-package-release.py` assembles a local candidate for the curated
