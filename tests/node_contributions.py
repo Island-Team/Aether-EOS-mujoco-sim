@@ -33,7 +33,7 @@ class NodeContributionTests(unittest.TestCase):
     for node in node_set["nodes"]:
       if node["profile"]["node_type"] in contributed_types:
         self.assertEqual(node["core"], "eos")
-        self.assertEqual(node["group"], "mujoco")
+        self.assertNotIn("group", node)
       for value in strings(node["profile"]):
         if value.startswith("@"):
           self.assertIn(value[1:], refs)
@@ -65,6 +65,20 @@ class NodeContributionTests(unittest.TestCase):
       self.assertGreaterEqual(
         set(safety["movement_modes"]), set(node_type["capabilities"]),
       )
+
+  def test_ports_describe_frequency_transport_and_data_class(self) -> None:
+    contract = contributions()
+    camera = next(item for item in contract["node_types"]
+                  if item["id"] == "eos.hardware.mujoco_camera@v1.0")
+    frame = next(item for item in camera["outputs"] if item["name"] == "frame")
+    self.assertEqual(frame["expected_rate_hz"], 30.0)
+    self.assertEqual(frame["transport"], "in_process")
+    self.assertEqual(frame["data_class"], "image")
+    for node_type in contract["node_types"]:
+      for port in node_type["inputs"] + node_type["outputs"]:
+        self.assertTrue(port["description"])
+        self.assertIn(port["data_class"],
+                      {"image", "observation", "command", "event", "state", "opaque"})
 
 
 if __name__ == "__main__":

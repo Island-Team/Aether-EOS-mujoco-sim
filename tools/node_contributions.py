@@ -10,8 +10,15 @@ VISION = "isosui.system.vision@v1.0"
 DISPATCHER = "cores/eos/layers/dispatcher/groups/control/nodes/command"
 
 
-def port(name: str, data_type: str, required: bool = False) -> dict:
-  return {"name": name, "data_type": data_type, "required": required}
+def port(name: str, data_type: str, required: bool = False,
+         description: str = "", expected_rate_hz: float | None = None,
+         data_class: str = "state") -> dict:
+  result = {"name": name, "data_type": data_type, "required": required,
+            "description": description, "transport": "in_process",
+            "data_class": data_class}
+  if expected_rate_hz is not None:
+    result["expected_rate_hz"] = expected_rate_hz
+  return result
 
 
 def node_type(id: str, layer: str, kind: str, lifecycle: str,
@@ -93,29 +100,46 @@ def contributions() -> dict:
     "node_types": [
       node_type(
         BACKEND, "process", "software", "process", ["process"], [],
-        [port("status", "status"), port("health", "health")],
+        [port("status", "status", description="Simulator process lifecycle"),
+         port("health", "health", description="Simulator process health")],
         [setting("scene", "string", True), setting("socket", "string", True),
          setting("env", "string_table"), setting("start_timeout_ms", "positive_integer")],
       ),
       node_type(
         CAMERA, "hardware", "camera", "adapter", ["rgb8", "aligned_depth_u16"], [],
-        [port("frame", "camera_frame"), port("health", "health"),
-         port("status", "status")],
+        [port("frame", "camera_frame", description="Front RGB camera frame",
+              expected_rate_hz=30.0, data_class="image"),
+         port("health", "health", description="Camera adapter health",
+              expected_rate_hz=10.0),
+         port("status", "status", description="Camera adapter lifecycle")],
       ),
       node_type(
         BASE, "hardware", "base", "adapter", ["body_velocity", "relative_pose"],
-        [port("command", "base_movement", True)],
-        [port("observation", "base_observation"), port("outcome", "command_outcome"),
-         port("health", "health"), port("status", "status")],
+        [port("command", "base_movement", True,
+              description="Admitted base movement", data_class="command")],
+        [port("observation", "base_observation",
+              description="Measured base pose and velocity",
+              expected_rate_hz=50.0, data_class="observation"),
+         port("outcome", "command_outcome",
+              description="Movement completion report", data_class="event"),
+         port("health", "health", description="Base adapter health",
+              expected_rate_hz=10.0),
+         port("status", "status", description="Base adapter lifecycle")],
         safety_adapter_type="mujoco-v2-base",
       ),
       node_type(
         MANIPULATOR, "hardware", "manipulator", "adapter",
         ["joint_positions", "end_effector_pose"],
-        [port("command", "manipulator_movement", True)],
-        [port("observation", "manipulator_observation"),
-         port("outcome", "command_outcome"), port("health", "health"),
-         port("status", "status")],
+        [port("command", "manipulator_movement", True,
+              description="Admitted joint movement", data_class="command")],
+        [port("observation", "manipulator_observation",
+              description="Measured joints and tool pose",
+              expected_rate_hz=50.0, data_class="observation"),
+         port("outcome", "command_outcome",
+              description="Movement completion report", data_class="event"),
+         port("health", "health", description="Arm adapter health",
+              expected_rate_hz=10.0),
+         port("status", "status", description="Arm adapter lifecycle")],
         safety_adapter_type="mujoco-v2-manipulator",
       ),
     ],
@@ -133,18 +157,18 @@ def contributions() -> dict:
         "dispatcher": {"type": "string", "default": DISPATCHER},
       },
       "nodes": [
-        {"ref": "simulator", "core": "eos", "layer": "process", "group": "mujoco",
+        {"ref": "simulator", "core": "eos", "layer": "process",
          "profile": {
            "id": "simulator", "node_type": BACKEND, "label": "MuJoCo simulator",
            "description": "EOS-owned simulator child from the verified package",
            "capabilities": ["process"],
            "settings": {"scene": "${scene}", "socket": "${socket}"},
          }},
-        {"ref": "front", "core": "eos", "layer": "hardware", "group": "mujoco",
+        {"ref": "front", "core": "eos", "layer": "hardware",
          "profile": camera},
-        {"ref": "drive", "core": "eos", "layer": "hardware", "group": "mujoco",
+        {"ref": "drive", "core": "eos", "layer": "hardware",
          "profile": base},
-        {"ref": "arm", "core": "eos", "layer": "hardware", "group": "mujoco",
+        {"ref": "arm", "core": "eos", "layer": "hardware",
          "profile": arm},
         {"ref": "camera_gate", "core": "eos", "layer": "interface", "group": "gate",
          "profile": {
