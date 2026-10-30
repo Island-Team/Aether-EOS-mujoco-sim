@@ -2,12 +2,13 @@
 
 
 BACKEND = "eos.process.mujoco@v1.0"
-CAMERA = "eos.hardware.mujoco_camera@v1.0"
-BASE = "eos.hardware.mujoco_base@v1.0"
-MANIPULATOR = "eos.hardware.mujoco_manipulator@v1.0"
+CAMERA = "eos.hardware.camera@v1.0"
+BASE = "eos.hardware.base@v1.0"
+MANIPULATOR = "eos.hardware.manipulator@v1.0"
 CAMERA_GATE = "eos.interface.camera_gate@v1.0"
-VISION = "isosui.system.vision@v1.0"
-DISPATCHER = "cores/eos/layers/dispatcher/groups/control/nodes/command"
+VISION = "isos.ui.vision@v1.0"
+BASE_PRIMITIVE = "eos.dispatcher.primitive_base@v1.0"
+MANIPULATOR_PRIMITIVE = "eos.dispatcher.primitive_manipulator@v1.0"
 
 
 def port(name: str, data_type: str, required: bool = False,
@@ -57,6 +58,7 @@ def hardware_profile(id: str, type_id: str, label: str, description: str,
     "references": ["@simulator"],
     "adapter": {
       "type": "mujoco-v2",
+      "package": {"id": "island/mujoco-sim", "version": "2.0.0"},
       "settings": {
         "backend": "@simulator",
         "socket_path": "${socket}",
@@ -83,7 +85,7 @@ def contributions() -> dict:
     "limits": {"max_linear_m_s": 1.0, "max_angular_rad_s": 1.5,
                "max_velocity_lease_ms": 500},
   }
-  base["inputs"] = {"command": {"node": "${dispatcher}", "output": "base_command"}}
+  base["inputs"] = {"command": [{"node": "@base-velocity", "output": "command"}]}
   arm = hardware_profile(
     "arm", MANIPULATOR, "Six axis arm", "MuJoCo six-joint position controller",
     "arm_base", ["joint_positions"], "arm-0", 50.0, 4096,
@@ -93,9 +95,7 @@ def contributions() -> dict:
     "modes": ["joint_positions"],
     "limits": {"max_joint_position_rad": 3.14, "max_joint_speed_rad_s": 1.0},
   }
-  arm["inputs"] = {
-    "command": {"node": "${dispatcher}", "output": "manipulator_command"},
-  }
+  arm["inputs"] = {"command": [{"node": "@arm-movej", "output": "command"}]}
   return {
     "node_types": [
       node_type(
@@ -105,56 +105,20 @@ def contributions() -> dict:
         [setting("scene", "string", True), setting("socket", "string", True),
          setting("env", "string_table"), setting("start_timeout_ms", "positive_integer")],
       ),
-      node_type(
-        CAMERA, "hardware", "camera", "adapter", ["rgb8", "aligned_depth_u16"], [],
-        [port("frame", "camera_frame", description="Front RGB camera frame",
-              expected_rate_hz=30.0, data_class="image"),
-         port("health", "health", description="Camera adapter health",
-              expected_rate_hz=10.0),
-         port("status", "status", description="Camera adapter lifecycle")],
-      ),
-      node_type(
-        BASE, "hardware", "base", "adapter", ["body_velocity", "relative_pose"],
-        [port("command", "base_movement", True,
-              description="Admitted base movement", data_class="command")],
-        [port("observation", "base_observation",
-              description="Measured base pose and velocity",
-              expected_rate_hz=50.0, data_class="observation"),
-         port("outcome", "command_outcome",
-              description="Movement completion report", data_class="event"),
-         port("health", "health", description="Base adapter health",
-              expected_rate_hz=10.0),
-         port("status", "status", description="Base adapter lifecycle")],
-        safety_adapter_type="mujoco-v2-base",
-      ),
-      node_type(
-        MANIPULATOR, "hardware", "manipulator", "adapter",
-        ["joint_positions", "end_effector_pose"],
-        [port("command", "manipulator_movement", True,
-              description="Admitted joint movement", data_class="command")],
-        [port("observation", "manipulator_observation",
-              description="Measured joints and tool pose",
-              expected_rate_hz=50.0, data_class="observation"),
-         port("outcome", "command_outcome",
-              description="Movement completion report", data_class="event"),
-         port("health", "health", description="Arm adapter health",
-              expected_rate_hz=10.0),
-         port("status", "status", description="Arm adapter lifecycle")],
-        safety_adapter_type="mujoco-v2-manipulator",
-      ),
     ],
-    "safety_adapters": [
-      {"id": "mujoco-v2-base", "kind": "base",
-       "movement_modes": ["body_velocity", "relative_pose"], "supports_stop": True},
-      {"id": "mujoco-v2-manipulator", "kind": "manipulator",
-       "movement_modes": ["joint_positions", "end_effector_pose"], "supports_stop": True},
-    ],
+    "safety_adapters": [],
+    "adapter_families": [{
+      "id": "mujoco-v2",
+      "device_kinds": ["camera", "base", "manipulator"],
+      "transport": "unix_socket",
+      "description": "EOS-owned MuJoCo simulator socket adapter for camera, base, and manipulator devices",
+      "supported_primitives": ["base.velocity@1.0.0", "arm.movej@1.0.0"],
+    }],
     "node_sets": [{
       "id": "sim-hardware",
       "parameters": {
         "scene": {"type": "string", "default": "pick-place"},
         "socket": {"type": "string"},
-        "dispatcher": {"type": "string", "default": DISPATCHER},
       },
       "nodes": [
         {"ref": "simulator", "core": "eos", "layer": "process", "group": "mujoco",
@@ -164,12 +128,26 @@ def contributions() -> dict:
            "capabilities": ["process"],
            "settings": {"scene": "${scene}", "socket": "${socket}"},
          }},
-        {"ref": "front", "core": "eos", "layer": "hardware", "group": "mujoco",
+        {"ref": "front", "core": "eos", "layer": "hardware", "group": "camera",
          "profile": camera},
-        {"ref": "drive", "core": "eos", "layer": "hardware", "group": "mujoco",
+        {"ref": "drive", "core": "eos", "layer": "hardware", "group": "base",
          "profile": base},
-        {"ref": "arm", "core": "eos", "layer": "hardware", "group": "mujoco",
+        {"ref": "arm", "core": "eos", "layer": "hardware", "group": "manipulator",
          "profile": arm},
+        {"ref": "base-velocity", "core": "eos", "layer": "dispatcher", "group": "base",
+         "profile": {
+           "id": "base-velocity", "node_type": BASE_PRIMITIVE,
+           "label": "Base velocity primitive", "description": "Admitted base.velocity binding for the drive device",
+           "settings": {"primitive_name": "base.velocity", "primitive_version": "1.0.0",
+                        "movement_type": "body_velocity"},
+         }},
+        {"ref": "arm-movej", "core": "eos", "layer": "dispatcher", "group": "manipulator",
+         "profile": {
+           "id": "arm-movej", "node_type": MANIPULATOR_PRIMITIVE,
+           "label": "Arm joint primitive", "description": "Admitted arm.movej binding for the six-joint arm",
+           "settings": {"primitive_name": "arm.movej", "primitive_version": "1.0.0",
+                        "movement_type": "joint_positions"},
+         }},
         {"ref": "camera-gate", "core": "eos", "layer": "interface", "group": "gate",
          "profile": {
            "id": "front-preview", "node_type": CAMERA_GATE,
@@ -177,7 +155,7 @@ def contributions() -> dict:
            "description": "Publishes a bounded preview of the MuJoCo front camera",
            "inputs": {"frame": {"node": "@front", "output": "frame"}},
          }},
-        {"ref": "vision", "core": "isosui", "layer": "system", "group": "ui",
+        {"ref": "vision", "core": "isos", "layer": "ui", "group": "panel",
          "profile": {
            "id": "vision", "node_type": VISION,
            "label": "Vision monitor",
