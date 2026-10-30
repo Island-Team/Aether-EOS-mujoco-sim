@@ -64,3 +64,5 @@ output are in `logs/test/2026-10-30-v2-live/{build,ctest,bundle,gui}.log`;
 XWD captures are in that same directory. Reproduce the visual check with
 `python3 tests/gui.py build/eos-mujoco-sim assets/scene.xml
 logs/test/2026-10-30-v2-live` on a desktop with X11 access.
+
+The six-node preset and port metadata passed `python3 tests/node_contributions.py` (four tests) on 2026-10-30. `python3 tools/build-backend-bundle.py --build-dir build --output logs/test/20261030-general-interfaces/bundle` staged a release candidate, and `ctest --test-dir build --output-on-failure` passed all ten simulator tests. Complete local output is in `logs/test/20261030-general-interfaces/`.

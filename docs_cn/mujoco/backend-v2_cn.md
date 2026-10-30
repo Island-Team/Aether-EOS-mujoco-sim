@@ -37,3 +37,5 @@ v2 Unix 套接字帧以八字节小端长度头开头，后接 JSON 元数据和
 ## 验证
 
 2026-10-30 的现有基线在 Ubuntu 和 MuJoCo 3.16.0 上通过了十个 CTest 用例。`tests/v2.py` 覆盖 JPEG 捕获、底盘运动、六关节命令、安全停止和套接字清理。GUI 检查还验证了可见窗口、运动后像素变化，以及显示服务不可用时的启动失败。完整日志保存在本地 `logs/test/2026-10-30-v2-live/`。新增节点声明可用 `python3 tests/node_contributions.py` 检查，并需通过 IsOS 与 EOS 的完整图准入及运行集成测试。
+
+2026-10-30，六节点预设及端口元数据通过 `python3 tests/node_contributions.py` 的四个测试。`python3 tools/build-backend-bundle.py --build-dir build --output logs/test/20261030-general-interfaces/bundle` 成功生成发布候选包，`ctest --test-dir build --output-on-failure` 的十个模拟器测试全部通过。完整本地输出保存在 `logs/test/20261030-general-interfaces/`。
