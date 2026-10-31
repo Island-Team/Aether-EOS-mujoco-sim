@@ -2,7 +2,7 @@
 
 [English](../../docs/mujoco/backend-v2.md)
 
-先构建模拟器，再生成本地 `island/mujoco-sim@2.0.0` 包：
+先构建模拟器，再生成本地 `island/mujoco-sim@0.1.1` 包：
 
 ```sh
 export MUJOCO_ROOT=/absolute/path/to/mujoco-3.16.0
@@ -11,12 +11,12 @@ cmake --build build -j
 ctest --test-dir build --output-on-failure
 python3 tests/node_contributions.py
 python3 tools/build-backend-bundle.py --output /absolute/path/to/mujoco-v2-bundle
-isos pkg link island/mujoco-sim 2.0.0 /absolute/path/to/mujoco-v2-bundle --manifest /absolute/path/to/mujoco-v2-bundle/release.json
+isos pkg link island/mujoco-sim 0.1.1 /absolute/path/to/mujoco-v2-bundle --manifest /absolute/path/to/mujoco-v2-bundle/release.json
 ```
 
 包中包含 `bin/eos-mujoco-sim`、两个场景及其资源、`backend-v2.json` 和本地 schema v4 `release.json`。构建工具还会在包目录旁生成带 SHA-256 校验值的发布归档。后端描述文件声明 `mujoco-v2` 协议、`cam-0`、`base-0`、`arm-0` 设备 ID，以及外部 MuJoCo 3.16.0 库依赖。IsOS 在运行前验证可执行文件、场景、资源和库；安装包本身不会启用部署图。
 
-发布清单中的 `node_contributions` 声明 `sim-hardware` 节点集和 `mujoco-v2` 适配器系列。唯一由包提供的节点类型是 `eos/process/mujoco/simulator` 中的模拟器进程。通用硬件类型把每台设备分别放在 `eos/hardware/camera/front`、`eos/hardware/base/drive` 和 `eos/hardware/manipulator/arm`。每台设备在适配器设置中选择 `mujoco-v2` 并固定 `island/mujoco-sim@2.0.0`；通用节点类型本身不固定包。适配器系列声明支持的设备类别和精确 primitive 版本，EOS 仍须验证已编译的工厂。节点集在 `eos/dispatcher/base` 和 `eos/dispatcher/manipulator` 下添加 `base.velocity@1.0.0`、`arm.movej@1.0.0` 绑定节点，其强类型命令输出连接到所选设备。共享 Dispatcher 服务负责准入和安全。相机连接 `eos/interface/gate` 下的门节点，为 `isos/ui/panel/vision` 提供默认输入。安装或链接后，IsOS 将节点集加入目录；预览时绑定场景和仅所有者可访问的套接字、解析符号引用，并验证共享图。预设仅编辑草稿图。Vision 可在运行时选择其他活跃且兼容的门节点，而无须改变默认连接。
+发布清单中的 `node_contributions` 声明 `sim-hardware` 节点集和 `mujoco-v2` 适配器系列。唯一由包提供的节点类型是 `eos/process/mujoco/simulator` 中的模拟器进程。通用硬件类型把每台设备分别放在 `eos/hardware/camera/front`、`eos/hardware/base/drive` 和 `eos/hardware/manipulator/arm`。每台设备在适配器设置中选择 `mujoco-v2` 并固定 `island/mujoco-sim@0.1.1`；通用节点类型本身不固定包。适配器系列声明支持的设备类别和精确 primitive 版本，EOS 仍须验证已编译的工厂。节点集在 `eos/dispatcher/base` 和 `eos/dispatcher/manipulator` 下添加 `base.velocity@1.0.0`、`arm.movej@1.0.0` 绑定节点，其强类型命令输出连接到所选设备。共享 Dispatcher 服务负责准入和安全。相机连接 `eos/interface/gate` 下的门节点，为 `isos/ui/panel/vision` 提供默认输入。安装或链接后，IsOS 将节点集加入目录；预览时绑定场景和仅所有者可访问的套接字、解析符号引用，并验证共享图。预设仅编辑草稿图。Vision 可在运行时选择其他活跃且兼容的门节点，而无须改变默认连接。
 
 后端节点的 `settings.env` 可设置 `MUJOCO_GUI=1` 或 `MUJOCO_GUI=true`，在支持 X11 的主机上打开 `IsOS MuJoCo — live simulation` 窗口。窗口渲染来自同一个 `SimEngine` 的相机画面；默认不显示 GUI。若请求 GUI 但显示服务不可用，模拟器启动失败。`tools/scene-view.sh` 仍用于独立的静态场景预览。
 
@@ -41,3 +41,7 @@ v2 Unix 套接字帧以八字节小端长度头开头，后接 JSON 元数据和
 2026-10-30，旧版六节点预设及端口元数据通过 `python3 tests/node_contributions.py` 的四个测试。`python3 tools/build-backend-bundle.py --build-dir build --output logs/test/20261030-general-interfaces/bundle-r3` 成功生成当时的发布候选包，`ctest --test-dir build --output-on-failure` 的十个模拟器测试全部通过。完整本地输出保存在 `logs/test/20261030-general-interfaces/`。当前八节点预设仍用相同的 Python 命令检查；2026-10-31 的模拟器基线十个测试通过，日志在 `logs/test/20261031-generic-device-preset/`。
 
 随后，独立的 IsOS 目录链接旧版 `bundle-r3`，使用场景和套接字参数预览 `sim-hardware`，并通过 EOS `aether-profile` 验证生成的图。该预览添加六个节点，只在当时四个 MuJoCo 类型上保留包引用，并报告三个由 IsOS 管理的进程。复现细节见 `logs/test/20261030-general-interfaces/graph-preview.log`。新版预设需要 EOS 和 IsOS 已更新的通用设备及 primitive 契约。
+
+## 软件包 0.1.1 检查（2026-10-31）
+
+`python3 tests/node_contributions.py`、`python3 tests/release.py` 和 `ctest --test-dir build --output-on-failure` 通过（10 项模拟器测试）。`python3 tools/build-backend-bundle.py --build-dir build --output logs/test/20261031-version-alignment/bundle` 暂存的软件包在发行清单与描述文件中均报告 `0.1.1`。描述文件 schema 和套接字协议保持 `2.0.0`。输出位于忽略 Git 的 `logs/test/20261031-version-alignment/`。

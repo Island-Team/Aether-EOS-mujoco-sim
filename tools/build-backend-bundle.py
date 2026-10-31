@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Stage the local island/mujoco-sim@2.0.0 IsOS backend bundle."""
+"""Stage the local island/mujoco-sim@0.1.1 IsOS backend bundle."""
 
 import argparse
 import hashlib
@@ -16,7 +16,7 @@ from node_contributions import contributions
 
 ROOT = Path(__file__).resolve().parents[1]
 PACKAGE_ID = "island/mujoco-sim"
-PACKAGE_VERSION = "2.0.0"
+PACKAGE_VERSION = "0.1.1"
 SOURCE = "https://github.com/Island-Team/isos-mujoco-sim"
 
 

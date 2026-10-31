@@ -15,7 +15,7 @@ backend node environment to view the running simulator's live state.
 
 ## Quick start
 
-For an IsOS/EOS 2.0.0 deployment, build and link a local `island/mujoco-sim@2.0.0` bundle, preview its `sim-hardware` node set, and apply the resulting shared graph. IsOS verifies the package and scene; EOS starts the simulator as its direct child. See the [v2 backend guide](docs/mujoco/backend-v2.md) and [package usage](docs/mujoco/usage.md). MuJoCo 3.16.0 remains an operator-provided dependency through `MUJOCO_ROOT`. The published v1.0.1 release is a separate legacy package; see [release history](docs/mujoco/package-release.md).
+For the current IsOS/EOS deployment, build and link a local `island/mujoco-sim@0.1.1` bundle, preview its `sim-hardware` node set, and apply the resulting shared graph. IsOS verifies the package and scene; EOS starts the simulator as its direct child. See the [v2 backend guide](docs/mujoco/backend-v2.md) and [package usage](docs/mujoco/usage.md). MuJoCo 3.16.0 remains an operator-provided dependency through `MUJOCO_ROOT`. The published v1.0.1 release is a separate legacy package; see [release history](docs/mujoco/package-release.md).
 
 The following source build is useful for development and direct runs.
 

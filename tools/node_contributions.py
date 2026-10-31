@@ -58,7 +58,7 @@ def hardware_profile(id: str, type_id: str, label: str, description: str,
     "references": ["@simulator"],
     "adapter": {
       "type": "mujoco-v2",
-      "package": {"id": "island/mujoco-sim", "version": "2.0.0"},
+      "package": {"id": "island/mujoco-sim", "version": "0.1.1"},
       "settings": {
         "backend": "@simulator",
         "socket_path": "${socket}",

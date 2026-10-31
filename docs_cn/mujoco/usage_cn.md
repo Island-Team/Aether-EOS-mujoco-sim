@@ -40,12 +40,12 @@ build/eos-mujoco-sim \
 
 ## IsOS 与 EOS v2
 
-当前 IsOS/EOS 2.0.0 路径使用本地 `island/mujoco-sim@2.0.0` 包和共享部署图。已发布的 v1.0.1 包属于旧图形态；其[发布文档](package-release_cn.md)仅供旧安装参考。按照 [v2 后端指南](backend-v2_cn.md)构建包，并设置真实的 `MUJOCO_ROOT`。
+当前 IsOS/EOS 路径使用本地 `island/mujoco-sim@0.1.1` 包和共享部署图。已发布的 v1.0.1 包属于旧图形态；其[发布文档](package-release_cn.md)仅供旧安装参考。按照 [v2 后端指南](backend-v2_cn.md)构建包，并设置真实的 `MUJOCO_ROOT`。
 
 ```sh
 python3 tools/build-backend-bundle.py --output /absolute/path/to/mujoco-v2-bundle
 isos init --mode dev
-isos pkg link island/mujoco-sim 2.0.0 /absolute/path/to/mujoco-v2-bundle --manifest /absolute/path/to/mujoco-v2-bundle/release.json
+isos pkg link island/mujoco-sim 0.1.1 /absolute/path/to/mujoco-v2-bundle --manifest /absolute/path/to/mujoco-v2-bundle/release.json
 isos pkg node-sets
 ```
 

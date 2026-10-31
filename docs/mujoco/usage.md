@@ -41,12 +41,12 @@ The Unix sockets are owner-only (`0600`). Use a private runtime directory for ev
 
 ## IsOS and EOS v2
 
-For the current IsOS/EOS 2.0.0 path, build and link a local `island/mujoco-sim@2.0.0` bundle as described in the [v2 backend guide](backend-v2.md). The published v1.0.1 package uses the retired graph shape; its [release guide](package-release.md) remains for historical installations. MuJoCo 3.16.0 is an operator-provided dependency; set `MUJOCO_ROOT` to the real installation before building the bundle and running the graph.
+For the current IsOS/EOS path, build and link a local `island/mujoco-sim@0.1.1` bundle as described in the [v2 backend guide](backend-v2.md). The published v1.0.1 package uses the retired graph shape; its [release guide](package-release.md) remains for historical installations. MuJoCo 3.16.0 is an operator-provided dependency; set `MUJOCO_ROOT` to the real installation before building the bundle and running the graph.
 
 ```sh
 python3 tools/build-backend-bundle.py --output /absolute/path/to/mujoco-v2-bundle
 isos init --mode dev
-isos pkg link island/mujoco-sim 2.0.0 /absolute/path/to/mujoco-v2-bundle --manifest /absolute/path/to/mujoco-v2-bundle/release.json
+isos pkg link island/mujoco-sim 0.1.1 /absolute/path/to/mujoco-v2-bundle --manifest /absolute/path/to/mujoco-v2-bundle/release.json
 isos pkg node-sets
 ```
 
