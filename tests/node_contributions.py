@@ -71,7 +71,7 @@ class NodeContributionTests(unittest.TestCase):
       self.assertNotIn("package", profile)
       self.assertEqual(profile["adapter"]["type"], family["id"])
       self.assertEqual(profile["adapter"]["package"],
-                       {"id": "island/mujoco-sim", "version": "2.0.0"})
+                       {"id": "island/mujoco-sim", "version": "0.1.1"})
     for device, binding, primitive in (("drive", "base-velocity", "base.velocity"),
                                        ("arm", "arm-movej", "arm.movej")):
       self.assertEqual(nodes[device]["profile"]["inputs"]["command"],

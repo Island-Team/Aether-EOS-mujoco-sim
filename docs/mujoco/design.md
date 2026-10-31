@@ -12,7 +12,7 @@ The simulator still exposes the legacy `eos.simulator.v1.SimulatorService` gRPC 
 
 EGIA attaches to an already-running EOS gateway, discovers its healthy devices and versioned primitives, and executes through EOS. It does not receive benchmark seed, goal truth, privileged state, or score. EGIA fleet aliases identify EOS endpoints; the simulation scene remains EOS's configuration choice. Agent evaluation compares an EGIA or other agent's EOS-visible behavior with a separate evaluator's private result.
 
-The published v1.0.1 package and its generated EOS profile belong to the legacy route. For v2, IsOS links or installs an exact `island/mujoco-sim@2.0.0` bundle, verifies its executable, scene, assets, and external MuJoCo library, and applies a shared graph revision through the `sim-hardware` node set. EOS reads that graph and starts the verified simulator as its direct child. A source build may still run directly with absolute scene and socket paths.
+The published v1.0.1 package and its generated EOS profile belong to the legacy route. For v2, IsOS links or installs an exact `island/mujoco-sim@0.1.1` bundle, verifies its executable, scene, assets, and external MuJoCo library, and applies a shared graph revision through the `sim-hardware` node set. EOS reads that graph and starts the verified simulator as its direct child. A source build may still run directly with absolute scene and socket paths.
 
 ## Timing and failures
 
